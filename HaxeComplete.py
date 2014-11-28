@@ -1553,6 +1553,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if display["commas"] is not None :
             commas = display["commas"]
 
+        mode = display["mode"]
+
         if int(sublime.version()) >= 3000 :
             x = "<root>"+err+"</root>"
         else :
@@ -1568,6 +1570,10 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if tree is not None :
             for i in tree.getiterator("type") :
                 hint = i.text.strip()
+
+                if mode == "type":
+                    return hint
+
                 spl = hint.split(" -> ")
 
                 types = [];
@@ -1686,10 +1692,13 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             self.errors = self.extract_errors( err, cwd )
 
-        if display["mode"] == "position":
+        if mode == "type":
+            return None # this should have returned earlier
+
+        if mode == "position":
             return pos
-        else:
-            return ( err, comps, status , hints )
+
+        return ( err, comps, status , hints )
 
     def extract_errors( self , str , cwd ):
         errors = []
