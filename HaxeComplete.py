@@ -1446,14 +1446,13 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         autocomplete = display is not None
 
-        if not autocomplete and build is not None and build.nmml is not None :
-            return self.run_nme( view, build )
-
-        if not autocomplete and build is not None and build.yaml is not None :
-            return self.run_flambe( view , build )
+        if not autocomplete and build is not None:
+            if build.nmml is not None :
+                return self.run_nme( view, build )
+            if build.yaml is not None :
+                return self.run_flambe( view , build )
 
         fn = view.file_name()
-
         if fn is None :
             return
 
@@ -1542,18 +1541,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         #print(" ".join(cmd))
         res, err = runcmd( cmd, "" )
 
-        if not autocomplete :
-            self.panel_output( view , " ".join(cmd) )
-
         status = ""
-
-        if (not autocomplete) and (build.hxml is None) :
-            #status = "Please create an hxml file"
-            self.extract_build_args( view , True )
-        elif not autocomplete :
-            # default message = build success
-            status = "Build success"
-
 
         #print(err)
         hints = []
@@ -1562,7 +1550,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         pos = None
 
         commas = 0
-        if display is not None and display["commas"] is not None :
+        if display["commas"] is not None :
             commas = display["commas"]
 
         if int(sublime.version()) >= 3000 :
@@ -1698,7 +1686,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             self.errors = self.extract_errors( err, cwd )
 
-        if display is not None and display["mode"] == "position":
+        if display["mode"] == "position":
             return pos
         else:
             return ( err, comps, status , hints )
