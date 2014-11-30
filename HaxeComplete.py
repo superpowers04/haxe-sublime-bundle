@@ -1782,16 +1782,16 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if not os.path.exists( tdir ):
             os.mkdir( tdir )
 
-        if os.path.exists( fn ):
+        if os.path.exists( fn ):   
             if os.path.exists( temp ):
+                os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
                 shutil.copy2( temp , fn )
-                os.chmod( temp, stat.S_IWRITE )
                 os.remove( temp )
             # copy saved file to temp for future restoring
             shutil.copy2( fn , temp )
 
-        # write current source to file
-        os.chmod( fn, stat.S_IWRITE )
+        os.chmod( fn , os.stat( fn ).st_mode | stat.S_IWRITE )
+        # write current source to file         
         f = codecs.open( fn , "wb" , "utf-8" , "ignore" )
         f.write( src )
         f.close()
@@ -1802,8 +1802,10 @@ class HaxeComplete( sublime_plugin.EventListener ):
         fn = view.file_name()
 
         if os.path.exists( temp ) :
+            os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
+                
             shutil.copy2( temp , fn )
-            os.chmod( temp, stat.S_IWRITE )
+            # os.chmod( temp, stat.S_IWRITE )
             os.remove( temp )
         else:
             # fn didn't exist in the first place, so we remove it
