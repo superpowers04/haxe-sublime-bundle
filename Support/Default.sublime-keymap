@@ -96,6 +96,22 @@
             { "key": "num_selections", "operator": "equal", "operand": 1 }
         ]
     },
+    { "keys": [")"], "command": "run_macro_file", "args": {"file": "Packages/Haxe/Macros/input/CloseParen.sublime-macro"}, "context":
+        [
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "not_equal", "operand": true, "match_all": true },
+            {
+                "key": "selector",
+                "operator": "equal",
+                "operand": "source.haxe.2"
+            },
+            {
+                "key": "selector",
+                "operator": "not_equal",
+                "operand": "string,comment,keyword.control.directive.conditional.haxe.2"
+            }
+        ]
+    },
     {
         "keys": [","],
         "command" : "haxe_hint",
