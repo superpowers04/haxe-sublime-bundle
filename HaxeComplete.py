@@ -1516,7 +1516,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
         for a in args :
             cmd.extend( list(a) )
 
-        print( cmd )
         #
         # TODO: replace runcmd with run_command('exec') when possible (haxelib, maybe build)
         #
@@ -1550,7 +1549,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if not autocomplete :
             self.panel_output( view , " ".join(cmd) )
 
-        print( res,err )
         
         status = ""
 
@@ -1630,14 +1628,32 @@ class HaxeComplete( sublime_plugin.EventListener ):
             pos = tree.findtext("pos")
             li = tree.find("list")
 
+            if li is None:
+                li = tree.find("il")
+
             if li is not None :
 
                 pos = li.findtext("pos")
 
                 for i in li.getiterator("i"):
                     name = i.get("n")
-                    sig = i.find("t").text
-                    doc = i.find("d").text
+                    if name is None:
+                        name = i.text
+
+                    t = i.find("t")
+                    if t is not None:
+                        sig = t.text
+                    else:
+                        sig = i.get("t")
+
+                    # if sig is None:
+                    #     sig = i.get("p")
+
+                    d = i.find("d")
+                    if d is not None:
+                        doc = d.text
+                    else:
+                        doc = "No Doc"
 
                     #if doc is None: doc = "No documentation found."
                     insert = name
@@ -1703,6 +1719,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             self.errors = self.extract_errors( err, cwd )
 
+        # print(comps)
         if mode == "type":
             return None # this should have returned earlier
 
@@ -1927,13 +1944,13 @@ class HaxeComplete( sublime_plugin.EventListener ):
             byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
             temp = self.save_temp_file( view )
             ret , haxeComps , status , hints = self.run_haxe( view , { "toplevel" : toplevelComplete , "filename" : fn , "offset" : offset , "commas" : commas , "mode" : None })
-
+            
             self.clear_temp_file( view , temp )
             
             if toplevelComplete and len(haxeComps) == 0 :
                 haxeComps = self.get_toplevel_completion( src , src_dir , self.get_build( view ) )
 
-            if completeChar not in "(," :
+            if toplevelComplete or completeChar not in "(," :
                 comps = haxeComps
 
             self.currentCompletion["outp"] = (ret,comps,status,hints)
