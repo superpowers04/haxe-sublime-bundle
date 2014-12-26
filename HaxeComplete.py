@@ -1490,7 +1490,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             args.append( ("-D", "st_display" ) )
 
             display_coords = display["filename"] + "@" + str( display["offset"] )
-            if display["toplevel"] :
+            if "toplevel" in display and display["toplevel"] :
                 display_coords += "@toplevel"
 
             args.append( ("--display", display_coords ) )
@@ -1773,7 +1773,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def on_query_completions(self, view, prefix, locations):
-        #print("complete")
+        
         pos = locations[0]
         scopes = view.scope_name(pos).split()
         #print(scopes)
