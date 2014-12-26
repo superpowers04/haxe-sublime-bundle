@@ -1487,13 +1487,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
             if display["mode"] is not None :
                 display_arg += "@" + display["mode"]
 
+            args.append( ("--display", display_arg ) )
             args.append( ("-D", "st_display" ) )
-
-            display_coords = display["filename"] + "@" + str( display["offset"] )
-            if "toplevel" in display and display["toplevel"] :
-                display_coords += "@toplevel"
-
-            args.append( ("--display", display_coords ) )
 
             if build.yaml is not None :
                 # Call out to `flambe haxe-flags` for Flambe completion
@@ -1543,7 +1538,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             return ("" , [], "" )
 
 
-        #print(" ".join(cmd))
+        # print(" ".join(cmd))
         res, err = runcmd( cmd, "" )
 
         if not autocomplete :
@@ -1937,13 +1932,16 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         #if toplevelComplete and (inControlStruct or completeChar not in "(,") :
         #    return comps,hints
+        mode = None
+        if( toplevelComplete ) :
+            mode = "toplevel"
 
         inp = (fn,offset,commas,src[0:offset-1])
         if self.currentCompletion["inp"] is None or inp != self.currentCompletion["inp"] :
 
             byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
             temp = self.save_temp_file( view )
-            ret , haxeComps , status , hints = self.run_haxe( view , { "toplevel" : toplevelComplete , "filename" : fn , "offset" : offset , "commas" : commas , "mode" : None })
+            ret , haxeComps , status , hints = self.run_haxe( view , { "filename" : fn , "offset" : offset , "commas" : commas , "mode" : mode })
             
             self.clear_temp_file( view , temp )
             
