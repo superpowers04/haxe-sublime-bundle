@@ -814,8 +814,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             for flag in [ "lib" , "D" , "swf-version" , "swf-header", "debug" , "-no-traces" , "-flash-use-stage" , "-gen-hx-classes" , "-remap" , "-no-inline" , "-no-opt" , "-php-prefix" , "-js-namespace" , "-dead-code-elimination" , "-remap" , "-php-front" , "-php-lib", "dce" , "-js-modern" , "swf-lib" ] :
                 if l.startswith( "-"+flag ) :
-                    currentBuild.args.append( tuple(l.split(" ") ) )
-
+                    args = l.split(" ")
+                    currentBuild.args.append( ( args[0] , " ".join( args[1:] ) ) )
                     break
 
             for flag in [ "resource" , "xml" , "java-lib" , "net-lib" ] :
