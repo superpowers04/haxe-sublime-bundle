@@ -1586,9 +1586,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
                 for t in spl :
                     currentType.append( t )
-                    if "(" in t or "{" in t :
+                    if "(" in t or "{" in t or "<" in t :
                         pars += 1
-                    if ")" in t or "}" in t :
+                    if ")" in t or "}" in t or ">" in t :
                         pars -= 1
 
                     if pars == 0 :
