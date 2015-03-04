@@ -3,20 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>name</key>
-	<string>Comments</string>
+	<string>Symbol List: Hide</string>
 	<key>scope</key>
-	<string>source.hxml</string>
+	<string>source.haxe.2 entity.name.type</string>
 	<key>settings</key>
 	<dict>
-		<key>shellVariables</key>
-		<array>
-			<dict>
-				<key>name</key>
-				<string>TM_COMMENT_START</string>
-				<key>value</key>
-				<string># </string>
-			</dict>
-		</array>
+		<key>showInSymbolList</key>
+		<integer>0</integer>
 	</dict>
+	<key>uuid</key>
+	<string>F5CE4B1B-6167-4693-A49B-021D97C18F5A</string>
 </dict>
 </plist>
