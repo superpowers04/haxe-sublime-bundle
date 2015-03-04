@@ -7,7 +7,7 @@
 	<key>scope</key>
 	<string>source.hxml</string>
 	<key>settings</key>
-		<dict>
+	<dict>
 		<key>shellVariables</key>
 		<array>
 			<dict>
