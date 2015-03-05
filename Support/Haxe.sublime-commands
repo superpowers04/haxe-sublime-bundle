@@ -6,6 +6,7 @@
     { "caption": "Haxe: Restart Server", "command": "haxe_restart_server" },
     { "caption": "Haxe: Run build", "command": "haxe_run_build" },
     { "caption": "Haxe: Choose Build Target", "command": "haxe_select_build" },
+    { "caption": "Haxe: Organize Imports", "command": "haxe_organize_imports" },
 	{ "caption": "Haxelib: List Installed", "command": "haxelib_list_installed", "args" : { "t" : "list"} },    
 	{ "caption": "Haxelib: Install library", "command": "haxelib_install_lib" },
 	{ "caption": "Haxelib: Remove library", "command": "haxelib_list_installed", "args" : { "t" : "remove"}  },    
