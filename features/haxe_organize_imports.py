@@ -23,6 +23,7 @@ class HaxeOrganizeImports(TextCommand):
         wildcards = {}
         import_pos = -1
         offset = 0
+        cur_package = self.get_cur_package(src)
 
         for mo in importLine.finditer(src):
             if import_pos == -1:
@@ -32,7 +33,7 @@ class HaxeOrganizeImports(TextCommand):
             clazz = mo.group(2)
             packagepath, _, classname = clazz.rpartition(".")
 
-            if packagepath != "":
+            if packagepath != "" and packagepath != cur_package:
                 splitted_classes.append((packagepath, classname))
             if classname == "*":
                 wildcards[packagepath] = True
@@ -47,6 +48,10 @@ class HaxeOrganizeImports(TextCommand):
                 classes.append(".".join(splitted_class))
 
         return classes, import_pos, indent
+
+    def get_cur_package(self, src):
+        mo = packageLine.search(src)
+        return "" if mo is None else mo.group(1)
 
     def get_import_pos(self):
         src = self.get_view_src()
