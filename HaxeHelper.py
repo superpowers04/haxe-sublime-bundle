@@ -18,7 +18,7 @@ def HaxeComplete_inst():
 
 spaceChars = re.compile("\s")
 wordChars = re.compile("[a-z0-9._]", re.I)
-importLine = re.compile("^([ \t]*)import\s+([a-z0-9._]+);", re.I | re.M)
+importLine = re.compile("^([ \t]*)import\s+([a-z0-9._*]+);", re.I | re.M)
 packageLine = re.compile("package\s*([a-z0-9.]*);", re.I)
 
 compilerOutput = re.compile("^(.+):(\\d+): (lines|characters?) (\\d+)(?:-(\\d+))? : (.*)$", re.M)
