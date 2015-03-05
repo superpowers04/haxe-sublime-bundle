@@ -7,6 +7,7 @@ from .haxe_generate_import import HaxeGenerateImport
 from .haxe_find_definition import HaxeFindDefinition
 from .haxe_show_type import HaxeShowType
 from .haxe_add_hxml import HaxeAddHxml
+from .haxe_organize_imports import HaxeOrganizeImports
 
 print("Haxe : Reloading haxe module")
 
@@ -17,4 +18,5 @@ __all__ = [
     'HaxeFindDefinition',
     'HaxeAddHxml',
     'HaxeShowType',
+    'HaxeOrganizeImports',
 ]
