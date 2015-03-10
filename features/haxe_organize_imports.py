@@ -394,7 +394,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
             self.classes_to_remove_map[cl] = \
                 not self.classes_to_remove_map[cl]
 
-        self.prompt_imports_to_remove()
+        self.prompt_imports_to_remove(index)
 
     def prompt_classes_to_import(self):
         clname = self.unimported_clnames_to_prompt[-1]
@@ -407,7 +407,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
             self.window, options, self.on_select_class_to_import,
             sublime.MONOSPACE_FONT, 0)
 
-    def prompt_imports_to_remove(self):
+    def prompt_imports_to_remove(self, selected_index=0):
         if not self.classes_to_remove_map:
             if self.add:
                 self.add_unimported_classes()
@@ -428,7 +428,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
 
         show_quick_panel(
             self.window, options, self.on_select_import_to_remove,
-            sublime.MONOSPACE_FONT, 0)
+            sublime.MONOSPACE_FONT, selected_index)
 
     def remove_unused_imports(self):
         used_classes = []
