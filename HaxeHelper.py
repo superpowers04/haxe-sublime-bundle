@@ -1,6 +1,7 @@
 import sys, sublime, sublime_plugin
 import subprocess, time
 import os, signal
+import errno
 
 from subprocess import Popen, PIPE
 from datetime import datetime
@@ -39,7 +40,7 @@ paramDefault = re.compile("(=\s*\"*[^\"]*\")", re.M)
 isType = re.compile("^[A-Z][a-zA-Z0-9_]*$")
 comments = re.compile("(//[^\n\r]*?[\n\r]|/\*(.*?)\*/)", re.MULTILINE | re.DOTALL )
 
-haxeVersion = re.compile("(Haxe|haXe) Compiler ([0-9]\.[0-9])",re.M)
+haxeVersion = re.compile("(Haxe|haXe) Compiler (([0-9]\.[0-9])\.?[0-9]?)",re.M)
 haxeFileRegex = "^(.+):(\\d+): (?:lines \\d+-\\d+|character(?:s \\d+-| )(\\d+)) : (.*)$"
 controlStruct = re.compile( "\s*(if|switch|for|while)\s*\($" );
 
@@ -61,6 +62,39 @@ except ImportError as e :
     ExecCommand = stexec.ExecCommand
     AsyncProcess = stexec.AsyncProcess
     unicode = str #dirty...
+
+def cache(filename, data=None):
+    cache_dir = os.path.join(
+        sublime.packages_path(), 'User', 'Haxe.cache')
+    cache_file = os.path.join(cache_dir, filename)
+
+    if not os.path.exists(cache_dir):
+        try:
+            os.makedirs(cache_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                return None
+
+    # read
+    if data is None:
+        try:
+            f = open(cache_file, 'r')
+            data = f.read()
+            f.close()
+            return data
+        except:
+            return None
+
+    # write
+    try:
+        f = open(cache_file, 'w')
+        f.write(data)
+        f.close()
+        return data
+    except:
+        pass
+
+    return None
 
 def runcmd( args, input=None ):
     try:

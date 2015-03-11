@@ -30,7 +30,7 @@ try: # Python 3
     from .features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from .HaxeHelper import runcmd, show_quick_panel
+    from .HaxeHelper import runcmd, show_quick_panel, cache
     from .HaxeHelper import spaceChars, wordChars, importLine, packageLine, compilerOutput
     from .HaxeHelper import compactFunc, compactProp, libLine, classpathLine, typeDecl
     from .HaxeHelper import libFlag, skippable, inAnonymous, extractTag
@@ -44,7 +44,7 @@ except (ValueError): # Python 2
     from features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from HaxeHelper import runcmd, show_quick_panel
+    from HaxeHelper import runcmd, show_quick_panel, cache
     from HaxeHelper import spaceChars, wordChars, importLine, packageLine, compilerOutput
     from HaxeHelper import compactFunc, compactProp, libLine, classpathLine, typeDecl
     from HaxeHelper import libFlag, skippable, inAnonymous, extractTag
@@ -1365,24 +1365,46 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if m is not None :
             HaxeComplete.stdPaths = set(m.group(1).split(";")) - set([".","./"])
 
-        for p in HaxeComplete.stdPaths :
-            #print("std path : "+p)
-            if len(p) > 1 and os.path.exists(p) and os.path.isdir(p):
-                classes, packs = self.extract_types( p )
-                HaxeComplete.stdClasses.extend( classes )
-                HaxeComplete.stdPackages.extend( packs )
-
         ver = re.search(haxeVersion , versionOut)
 
+        HaxeComplete.stdClasses = []
+        HaxeComplete.stdPackages = []
+
+        use_cache = view.settings().get('haxe_use_cache', True)
+        cached_std = None
+        cache_filename = None
+
         if ver is not None :
-            self.compilerVersion = float(ver.group(2))
+            self.compilerVersion = float(ver.group(3))
 
             if self.compilerVersion >= 3 :
                 HaxeBuild.targets.append("swf8")
             else :
                 HaxeBuild.targets.append("swf9")
 
-            self.serverMode = float(ver.group(2)) * 100 >= 209
+            self.serverMode = float(ver.group(3)) * 100 >= 209
+
+            if use_cache:
+                cache_filename = 'std%s.cache' % ver.group(2)
+                cached_std = cache(cache_filename)
+            if cached_std is not None:
+                cp = cached_std.split(';')
+                HaxeComplete.stdClasses.extend( cp[0].split(',') )
+                HaxeComplete.stdPackages.extend( cp[1].split(',') )
+
+        if cached_std is None:
+            for p in HaxeComplete.stdPaths :
+                #print("std path : "+p)
+                if len(p) > 1 and os.path.exists(p) and os.path.isdir(p):
+                    classes, packs = self.extract_types( p )
+                    HaxeComplete.stdClasses.extend( classes )
+                    HaxeComplete.stdPackages.extend( packs )
+
+            if cache_filename is not None and use_cache:
+                cached_std = ';'.join(
+                    (','.join(HaxeComplete.stdClasses),
+                    ','.join(HaxeComplete.stdPackages)))
+                cache(cache_filename, cached_std)
 
         buildServerMode = settings.get('haxe_build_server_mode', True)
         completionServerMode = settings.get('haxe_completion_server_mode',True)
@@ -1544,7 +1566,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if not autocomplete :
             self.panel_output( view , " ".join(cmd) )
 
-        
+
         status = ""
 
         #print(err)
@@ -1768,7 +1790,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def on_query_completions(self, view, prefix, locations):
-        
+
         pos = locations[0]
         scopes = view.scope_name(pos).split()
         #print(scopes)
@@ -1804,7 +1826,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if not os.path.exists( tdir ):
             os.mkdir( tdir )
 
-        if os.path.exists( fn ):   
+        if os.path.exists( fn ):
             if os.path.exists( temp ):
                 os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
                 shutil.copy2( temp , fn )
@@ -1813,7 +1835,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             shutil.copy2( fn , temp )
 
         os.chmod( fn , os.stat( fn ).st_mode | stat.S_IWRITE )
-        # write current source to file         
+        # write current source to file
         f = codecs.open( fn , "wb" , "utf-8" , "ignore" )
         f.write( src )
         f.close()
@@ -1825,7 +1847,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         if os.path.exists( temp ) :
             os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
-                
+
             shutil.copy2( temp , fn )
             # os.chmod( temp, stat.S_IWRITE )
             os.remove( temp )
@@ -1942,9 +1964,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
             byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
             temp = self.save_temp_file( view )
             ret , haxeComps , status , hints = self.run_haxe( view , { "filename" : fn , "offset" : offset , "commas" : commas , "mode" : mode })
-            
+
             self.clear_temp_file( view , temp )
-            
+
             if toplevelComplete and len(haxeComps) == 0 :
                 haxeComps = self.get_toplevel_completion( src , src_dir , self.get_build( view ) )
 
