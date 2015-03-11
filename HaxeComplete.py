@@ -1544,7 +1544,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if not autocomplete :
             self.panel_output( view , " ".join(cmd) )
 
-        
+
         status = ""
 
         #print(err)
@@ -1768,7 +1768,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def on_query_completions(self, view, prefix, locations):
-        
+
         pos = locations[0]
         scopes = view.scope_name(pos).split()
         #print(scopes)
@@ -1804,7 +1804,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if not os.path.exists( tdir ):
             os.mkdir( tdir )
 
-        if os.path.exists( fn ):   
+        if os.path.exists( fn ):
             if os.path.exists( temp ):
                 os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
                 shutil.copy2( temp , fn )
@@ -1813,7 +1813,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             shutil.copy2( fn , temp )
 
         os.chmod( fn , os.stat( fn ).st_mode | stat.S_IWRITE )
-        # write current source to file         
+        # write current source to file
         f = codecs.open( fn , "wb" , "utf-8" , "ignore" )
         f.write( src )
         f.close()
@@ -1825,7 +1825,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         if os.path.exists( temp ) :
             os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
-                
+
             shutil.copy2( temp , fn )
             # os.chmod( temp, stat.S_IWRITE )
             os.remove( temp )
@@ -1941,10 +1941,10 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
             temp = self.save_temp_file( view )
-            ret , haxeComps , status , hints = self.run_haxe( view , { "filename" : fn , "offset" : offset , "commas" : commas , "mode" : mode })
-            
+            ret , haxeComps , status , hints = self.run_haxe( view , { "filename" : fn , "offset" : byte_offset , "commas" : commas , "mode" : mode })
+
             self.clear_temp_file( view , temp )
-            
+
             if toplevelComplete and len(haxeComps) == 0 :
                 haxeComps = self.get_toplevel_completion( src , src_dir , self.get_build( view ) )
 
