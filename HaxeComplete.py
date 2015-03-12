@@ -750,126 +750,144 @@ class HaxeComplete( sublime_plugin.EventListener ):
     def read_hxml( self, build ) :
         #print("Reading build " + build );
 
-        builds = []
-        buildPath = os.path.dirname(build);
+        def _read_hxml( build, builds ) :
+            buildPath = os.path.dirname(build);
 
-        spl = build.split("@")
-        if( len(spl) == 2 ) :
-            buildPath = spl[0]
-            build = os.path.join( spl[0] , spl[1] )
+            spl = build.split("@")
+            if( len(spl) == 2 ) :
+                buildPath = spl[0]
+                build = os.path.join( spl[0] , spl[1] )
 
-        if not os.path.exists( build ) :
-            return builds
+            if not os.path.exists( build ) :
+                return builds
 
-        #print( buildPath, build )
-
-        currentBuild = HaxeBuild()
-        currentBuild.hxml = build
-        currentBuild.cwd = buildPath
-
-        #print( currentBuild )
-
-        f = codecs.open( build , "r+" , "utf-8" , "ignore" )
-
-        while 1:
-            l = f.readline()
-            if not l :
-                break;
-            if l.startswith("--next") :
-                if len(currentBuild.classpaths) == 0:
-                    currentBuild.classpaths.append( buildPath )
-                    currentBuild.args.append( ("-cp" , buildPath ) )
-
-                if currentBuild.is_valid() :
-                    builds.append( currentBuild )
-
+            if builds:
+                currentBuild = builds[-1]
+            else:
                 currentBuild = HaxeBuild()
                 currentBuild.hxml = build
                 currentBuild.cwd = buildPath
+                builds.append(currentBuild)
 
-            l = l.strip()
+            #print( currentBuild )
 
-            if l.startswith("-main") :
-                spl = l.split(" ")
-                if len( spl ) == 2 :
-                    currentBuild.main = spl[1]
-                else :
-                    sublime.status_message( "Invalid build.hxml : no Main class" )
+            with codecs.open( build , "r+" , "utf-8" , "ignore" ) as f:
+                for l in f.readlines():
+                    l = l.strip()
 
-            if l.startswith("-lib") :
-                spl = l.split(" ")
-                if len( spl ) == 2 :
-                    lib = HaxeLib.get( spl[1] )
-                    currentBuild.libs.append( lib )
-                else :
-                    sublime.status_message( "Invalid build.hxml : lib not found" )
+                    if l.startswith("#") : # a comment
+                        pass
 
-            for flag in [ "cmd" , "-macro" ] :
-                spl = l.split(" ")
-                if l.startswith( "-" + flag ) :
-                    currentBuild.args.append( ( spl[0] , " ".join(spl[1:]) ) )
+                    elif l.startswith("--next") :
+                        currentBuild = HaxeBuild()
+                        currentBuild.hxml = build
+                        currentBuild.cwd = buildPath
+                        builds.append(currentBuild)
 
-            #if l.startswith("--connect") and HaxeComplete.inst.serverMode :
-            #   currentBuild.args.append( ( "--connect" , str(self.serverPort) ))
+                    elif l.startswith("-main") :
+                        spl = l.split(" ", 1)
+                        if len( spl ) == 2 :
+                            currentBuild.main = spl[1]
+                        else :
+                            sublime.status_message( "Invalid build.hxml : no Main class" )
 
-            for flag in [ "lib" , "D" , "swf-version" , "swf-header", "debug" , "-no-traces" , "-flash-use-stage" , "-gen-hx-classes" , "-remap" , "-no-inline" , "-no-opt" , "-php-prefix" , "-js-namespace" , "-dead-code-elimination" , "-remap" , "-php-front" , "-php-lib", "dce" , "-js-modern" , "swf-lib" ] :
-                if l.startswith( "-"+flag ) :
-                    args = l.split(" ")
-                    currentBuild.args.append( ( args[0] , " ".join( args[1:] ) ) )
-                    break
+                    elif l.startswith("-lib") :
+                        spl = l.split(" ", 1)
+                        if len( spl ) == 2 :
+                            lib = HaxeLib.get( spl[1] )
+                            currentBuild.libs.append( lib )
+                        else :
+                            sublime.status_message( "Invalid build.hxml : lib not found" )
 
-            for flag in [ "resource" , "xml" , "java-lib" , "net-lib" ] :
-                if l.startswith( "-"+flag ) :
-                    spl = l.split(" ")
-                    outp = os.path.join( buildPath , " ".join(spl[1:]) )
-                    currentBuild.args.append( ("-"+flag, outp) )
+                    elif [l for flag in [ "cmd" , "-macro" ] if l.startswith( "-" + flag )] :
+                        spl = l.split(" ", 1)
+                        currentBuild.args.append( ( spl[0] , spl[1] ) )
 
-                    break
+                    #elif l.startswith("--connect") and HaxeComplete.inst.serverMode :
+                    #   currentBuild.args.append( ( "--connect" , str(self.serverPort) ))
 
-            #print(HaxeBuild.targets)
-            for flag in HaxeBuild.targets :
-                if l.startswith( "-" + flag + " " ) :
+                    elif [l for flag in [
+                        "lib" ,
+                        "D" ,
+                        "swf-version" ,
+                        "swf-header",
+                        "debug" ,
+                        "-no-traces" ,
+                        "-flash-use-stage" ,
+                        "-gen-hx-classes" ,
+                        "-remap" ,
+                        "-no-inline" ,
+                        "-no-opt" ,
+                        "-php-prefix" ,
+                        "-js-namespace" ,
+                        "-dead-code-elimination" ,
+                        "-remap" ,
+                        "-php-front" ,
+                        "-php-lib",
+                        "dce" ,
+                        "-js-modern" ,
+                        "swf-lib"
+                    ] if l.startswith( "-"+flag )]:
+                        currentBuild.args.append( l.split(" ", 1) )
 
-                    spl = l.split(" ")
-                    #outp = os.path.join( folder , " ".join(spl[1:]) )
-                    outp = " ".join(spl[1:])
-                    #currentBuild.args.append( ("-"+flag, outp) )
+                    elif [l for flag in [ "resource" , "xml" , "java-lib" , "net-lib" ] if l.startswith( "-"+flag )] :
+                        spl = l.split(" ", 1)
+                        outp = os.path.join( buildPath , spl[1] )
+                        currentBuild.args.append( (spl[0] , outp) )
 
-                    currentBuild.target = flag
-                    currentBuild.output = outp
-                    break
+                    #print(HaxeBuild.targets)
+                    elif [l for flag in HaxeBuild.targets if l.startswith( "-" + flag + " " )] :
+                        spl = l.split(" ", 1)
+                        #outp = os.path.join( folder , spl[1] )
+                        outp = spl[1]
+                        #currentBuild.args.append( ("-"+spl[0], outp) )
+                        currentBuild.target = spl[0][1:]
+                        currentBuild.output = outp
 
-            if l.startswith( "--interp" ) :
-                currentBuild.target = "-interp" # we add '-' to the target later on
-                currentBuild.output = ""
+                    elif l.startswith( "--interp" ) :
+                        currentBuild.target = "-interp" # we add '-' to the target later on
+                        currentBuild.output = ""
 
-            if l.startswith( "--run" ) :
-                spl = l.split(" ")
-                #outp = os.path.join( folder , " ".join(spl[1:]) )
-                outp = " ".join(spl[1:])
+                    elif l.startswith( "--run" ) :
+                        spl = l.split(" ", 1)
+                        #outp = os.path.join( folder , spl[1] )
+                        outp = spl[1]
 
-                currentBuild.target = "-run" # we add '-' to the target later on
-                currentBuild.output = outp
-                currentBuild.main = outp
+                        currentBuild.target = "-run" # we add '-' to the target later on
+                        currentBuild.output = outp
+                        currentBuild.main = outp
 
-            if l.startswith("-cp "):
-                cp = l.split(" ")
-                #view.set_status( "haxe-status" , "Building..." )
-                cp.pop(0)
-                classpath = " ".join( cp )
-                absClasspath = classpath#os.path.join( buildPath , classpath )
-                currentBuild.classpaths.append( absClasspath )
-                currentBuild.args.append( ("-cp" , absClasspath ) )
+                    elif l.startswith("-cp "):
+                        cp = l.split(" ", 1)
+                        #view.set_status( "haxe-status" , "Building..." )
+                        classpath = cp[1]
+                        absClasspath = classpath#os.path.join( buildPath , classpath )
+                        currentBuild.classpaths.append( absClasspath )
+                        currentBuild.args.append( ("-cp" , absClasspath ) )
 
+                    elif l.endswith(".hxml"):
+                        _read_hxml(os.path.join(currentBuild.cwd, l), builds)
 
-        if len(currentBuild.classpaths) == 0:
-            currentBuild.classpaths.append( buildPath )
-            currentBuild.args.append( ("-cp" , buildPath ) )
+                    elif re.match(r'[A-Za-z0-9_\.]+', l): # a haxe class
+                        currentBuild.args.append( (l,) )
 
-        if currentBuild.is_valid() :
-            builds.append( currentBuild )
+                    elif l:
+                        sublime.status_message("unknown compiler argument: " + l)
 
-        return builds
+                        # maybe there is a new compiler argument that we don't know,
+                        # so let's add the argument anyway
+                        currentBuild.args.append( (l,) )
+
+            return builds
+
+        builds = _read_hxml(build, [])
+
+        for build in builds:
+            if len(build.classpaths) == 0:
+                build.classpaths.append( build.cwd )
+                build.args.append( ("-cp" , build.cwd ) )
+
+        return [build for build in builds if build.is_valid()]
 
     def add_build( self , build ) :
         if build in self.builds :
