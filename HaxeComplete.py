@@ -796,6 +796,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
                         if len( spl ) == 2 :
                             lib = HaxeLib.get( spl[1] )
                             currentBuild.libs.append( lib )
+                            currentBuild.args.append( spl )
                         else :
                             sublime.status_message( "Invalid build.hxml : lib not found" )
 
@@ -807,7 +808,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
                     #   currentBuild.args.append( ( "--connect" , str(self.serverPort) ))
 
                     elif [l for flag in [
-                        "lib" ,
                         "D" ,
                         "swf-version" ,
                         "swf-header",
