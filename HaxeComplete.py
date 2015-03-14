@@ -1963,7 +1963,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
             temp = self.save_temp_file( view )
-            ret , haxeComps , status , hints = self.run_haxe( view , { "filename" : fn , "offset" : offset , "commas" : commas , "mode" : mode })
+            ret , haxeComps , status , hints = self.run_haxe( view , { "filename" : fn , "offset" : byte_offset , "commas" : commas , "mode" : mode })
 
             self.clear_temp_file( view , temp )
 
