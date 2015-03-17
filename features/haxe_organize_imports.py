@@ -5,15 +5,29 @@ from copy import deepcopy
 from os.path import basename
 
 try:  # Python 3
-    from ..HaxeHelper import importLine, packageLine, show_quick_panel, \
+    from ..HaxeHelper import packageLine, show_quick_panel, \
         typeDecl, HaxeComplete_inst
 except (ValueError):  # Python 2
-    from HaxeHelper import importLine, packageLine, show_quick_panel, \
+    from HaxeHelper import packageLine, show_quick_panel, \
         typeDecl, HaxeComplete_inst
 
 
-class_re = re.compile('[\w.]*[A-Z]\w*')
+type_re = re.compile('[\w.]*[A-Z]\w*')
+word_re = re.compile('\\b[_a-zA-Z]\w*\\b')
 conditions_re = re.compile('[ \t]*#(if|elseif|else|end)', re.M)
+import_line_re = re.compile(
+    '^([ \t]*)import\s+'
+    '('
+    '((\\b[a-z]\w*\.)*)'
+    '((\\b[A-Z]\w*\.?|\*)+)'
+    '(\\b[_a-z]\w*|\*)?'
+    ')\s*;', re.M)
+using_line_re = re.compile(
+    '^([ \t]*)using\s+'
+    '('
+    '((\\b[a-z]\w*\.)*)'
+    '((\\b[A-Z]\w*\.?)+)'
+    ')\s*;', re.M)
 
 
 def add_type_path(type_map, typename, path):
@@ -54,23 +68,23 @@ def get_declared_typename_map(src):
     return dct
 
 
-def get_full_module(package_or_module, classname):
-    if package_or_module == '':
-        return classname
-    if is_package(package_or_module):
-        return '.'.join((package_or_module, classname))
-    return package_or_module
+def get_full_imp(imppath, impname):
+    if imppath == '':
+        return impname
+    if is_package(imppath) or not is_type(impname) or impname == '*':
+        return '.'.join((imppath, impname))
+    return imppath
 
 
-def get_imported_clname_map(src, ignored_class_map=None):
+def get_imported_clname_map(src, imp_to_ignore_map=None):
     dct = {}
 
-    for mo in importLine.finditer(src):
-        cl = mo.group(2)
-        if ignored_class_map is not None and cl in ignored_class_map:
+    for mo in import_line_re.finditer(src):
+        imp = mo.group(2)
+        if imp_to_ignore_map is not None and imp in imp_to_ignore_map:
             continue
-        clname = cl.rpartition('.')[2]
-        dct[clname] = True
+        impname = imp.rpartition('.')[2]
+        dct[impname] = True
 
     return dct
 
@@ -79,9 +93,9 @@ def get_module_map(typenames):
     dct = {}
 
     for typename in typenames:
-        if typename not in HaxeOrganizeImports.build_class_map:
+        if typename not in HaxeOrganizeImports.build_type_map:
             continue
-        modules = HaxeOrganizeImports.build_class_map[typename]
+        modules = HaxeOrganizeImports.build_type_map[typename]
         if not modules:
             continue
         if is_string(modules):
@@ -98,9 +112,18 @@ def get_module_map(typenames):
 def get_used_typename_map(src):
     dct = {}
 
-    for mo in class_re.finditer(src):
+    for mo in type_re.finditer(src):
         if '.' not in mo.group(0):
             dct[mo.group(0)] = True
+
+    return dct
+
+
+def get_used_words_map(src):
+    dct = {}
+
+    for mo in word_re.finditer(src):
+        dct[mo.group(0)] = True
 
     return dct
 
@@ -110,32 +133,32 @@ def get_view_src(view):
 
 
 def init_build_class_map(view):
-    if HaxeOrganizeImports.std_class_map is None:
-        HaxeOrganizeImports.std_class_map = \
-            init_class_map(HaxeComplete_inst().__class__.stdClasses)
+    if HaxeOrganizeImports.std_type_map is None:
+        HaxeOrganizeImports.std_type_map = \
+            init_type_map(HaxeComplete_inst().__class__.stdClasses)
 
     if HaxeOrganizeImports.build_classes is None:
         build = HaxeComplete_inst().get_build(view)
         HaxeOrganizeImports.build_classes, _ = build.get_types()
 
-    HaxeOrganizeImports.build_class_map = init_class_map(
+    HaxeOrganizeImports.build_type_map = init_type_map(
         HaxeOrganizeImports.build_classes,
-        HaxeOrganizeImports.std_class_map)
+        HaxeOrganizeImports.std_type_map)
 
 
-def init_class_map(classes, class_map=None):
-    if class_map is None:
-        class_map = {}
+def init_type_map(types, type_map=None):
+    if type_map is None:
+        type_map = {}
     else:
-        class_map = deepcopy(class_map)
+        type_map = deepcopy(type_map)
 
-    for cl in classes:
-        cl, _, _ = cl.partition("<")
-        package, _, clname = cl.rpartition(".")
+    for tp in types:
+        tp, _, _ = tp.partition("<")
+        path, _, typename = tp.rpartition(".")
 
-        add_type_path(class_map, clname, package)
+        add_type_path(type_map, typename, path)
 
-    return class_map
+    return type_map
 
 
 def is_haxe_scope(view):
@@ -151,12 +174,17 @@ def is_in_regions(regions, pos):
 
 
 def is_package(package):
-    first_letter = package.rpartition('.')[2][:1]
+    first_letter = package.rpartition('.')[2][0]
     return first_letter.lower() == first_letter
 
 
 def is_string(value):
     return type(value) == type(' ')
+
+
+def is_type(name):
+    first_letter = name[0]
+    return first_letter.upper() == first_letter
 
 
 def search_conditional_regions(src):
@@ -181,13 +209,16 @@ def search_conditional_regions(src):
 class HaxeOrganizeImportsEdit(sublime_plugin.TextCommand):
 
     def insert_imports(self, edit):
-        classes = HaxeOrganizeImports.active_inst.classes_to_import
+        imps = HaxeOrganizeImports.active_inst.imps_to_add
+        if not imps:
+            return
+
         pos = HaxeOrganizeImports.active_inst.insert_pos
         indent = HaxeOrganizeImports.active_inst.indent
         ins = HaxeOrganizeImports.active_inst.empty_lines_before
 
-        for cl in classes:
-            ins += '%simport %s;\n' % (indent, cl)
+        for imp in imps:
+            ins += '%simport %s;\n' % (indent, imp)
 
         self.view.insert(edit, pos, ins)
 
@@ -222,8 +253,9 @@ class HaxeOrganizeImportsEventListener(sublime_plugin.EventListener):
 
     def on_build_change(self, view):
         build = HaxeComplete_inst().get_build(view)
-        HaxeOrganizeImports.build_classes, _ = build.get_types()
-        HaxeOrganizeImports.build_class_map = None
+        if build is not None:
+            HaxeOrganizeImports.build_classes, _ = build.get_types()
+            HaxeOrganizeImports.build_type_map = None
 
     def on_load(self, view):
         self.add_build_change_callback(view)
@@ -240,113 +272,130 @@ class HaxeOrganizeImportsEventListener(sublime_plugin.EventListener):
         cur_modulename = get_cur_modulename(view)
         cur_package = get_cur_package(src)
 
-        if HaxeOrganizeImports.build_class_map is None:
+        if HaxeOrganizeImports.build_type_map is None:
             init_build_class_map(view)
 
         for typename in declared_typename_map:
             if typename == cur_modulename:
                 continue
             add_type_path(
-                HaxeOrganizeImports.build_class_map,
+                HaxeOrganizeImports.build_type_map,
                 typename,
-                get_full_module(cur_package, cur_modulename))
+                get_full_imp(cur_package, cur_modulename))
 
 
 class HaxeOrganizeImports(sublime_plugin.WindowCommand):
 
     active_inst = None
-    build_class_map = None
+    build_type_map = None
     build_classes = None
-    std_class_map = None
+    std_type_map = None
 
     def add_unimported_classes(self):
         self.search_unimported_classes()
 
-        if self.unimported_clnames_to_prompt:
+        if self.missing_impnames_to_prompt:
             self.prompt_classes_to_import()
         else:
             self.complete_adding_unimported_classes()
 
     def check_modules(self):
         module_map = get_module_map(self.used_typename_map.keys())
-        classes_to_del = []
+        imps_to_del = []
 
-        for cl in self.classes_to_remove_map:
-            if cl in module_map:
-                classes_to_del.append(cl)
+        for imp in self.imp_to_remove_map:
+            if imp in module_map:
+                imps_to_del.append(imp)
 
-        for cl in classes_to_del:
-            del self.classes_to_remove_map[cl]
+        for imp in imps_to_del:
+            del self.imp_to_remove_map[imp]
 
     def clean(self):
-        self.classes_to_import = None
-        self.classes_to_remove_map = None
+        self.imps_to_add = None
+        self.imp_to_remove_map = None
         self.lines_to_remove = None
-        self.unimported_classes = None
+        self.missing_imps = None
+        self.used_words_map = None
         self.used_typename_map = None
-        self.ignored_class_map = None
+        self.imp_to_ignore_map = None
         HaxeOrganizeImports.active_inst = None
 
     def complete_adding_unimported_classes(self):
-        if self.unimported_classes:
-            self.classes_to_import.extend(self.unimported_classes)
+        if self.missing_imps:
+            self.imps_to_add.extend(self.missing_imps)
 
         sublime.set_timeout(lambda: self.complete_command(), 10)
 
     def complete_command(self):
-        if self.classes_to_remove_map:
-            for cl in self.classes_to_remove_map:
-                if not self.remove or not self.classes_to_remove_map[cl]:
-                    self.classes_to_import.append(cl)
+        if self.imp_to_remove_map:
+            for imp in self.imp_to_remove_map:
+                if not self.remove or not self.imp_to_remove_map[imp]:
+                    self.imps_to_add.append(imp)
 
         if self.sort:
-            self.classes_to_import.sort()
+            self.imps_to_add.sort()
 
         self.window.run_command('haxe_organize_imports_edit')
 
     def extract_imports(self):
         src = get_view_src(self.window.active_view())
+        self.src_wo_imports = src
         conditional_regions = search_conditional_regions(src)
-        self.classes_to_remove_map = {}
-        self.ignored_class_map = {}
+        self.imp_to_remove_map = {}
+        self.imp_to_ignore_map = {}
         self.indent = ''
         self.empty_lines_before = ''
         self.insert_pos = -1
-        self.classes_to_import = []
-        classes_to_import_parts = []
-        wildcard_package_map = {}
+        self.imps_to_add = []
+        splitted_imps_to_add = []
+        wildcard_path_map = {}
         cur_package = get_cur_package(src)
-        self.used_typename_map = get_used_typename_map(src)
         self.lines_to_remove = []
+        offset = 0
 
-        for mo in importLine.finditer(src):
-            cl = mo.group(2)
+        for mo in import_line_re.finditer(src):
+            imp = mo.group(2)
+            imppath, _, impname = imp.rpartition('.')
+
+            self.src_wo_imports = \
+                self.src_wo_imports[:mo.start(0) - offset] + \
+                self.src_wo_imports[mo.end(0) - offset + 1:]
+            offset += mo.end(0) - mo.start(0) + 1
 
             if is_in_regions(conditional_regions, mo.start(0)):
-                self.ignored_class_map[cl] = True
+                self.imp_to_ignore_map[imp] = True
                 continue
 
             if self.insert_pos == -1:
                 self.insert_pos = mo.start(0)
                 self.indent = mo.group(1)
 
-            package, _, clname = cl.rpartition('.')
-
-            if package == '' or package == cur_package:
-                self.classes_to_remove_map[cl] = True
+            if imppath == '' or imppath == cur_package:
+                self.imp_to_remove_map[imp] = True
             else:
-                classes_to_import_parts.append((package, clname))
-            if clname == '*':
-                wildcard_package_map[package] = True
+                splitted_imps_to_add.append((imppath, impname))
+            if impname == '*':
+                wildcard_path_map[imppath] = True
 
             self.lines_to_remove.append(mo.start(0))
 
         while True:
-            if not classes_to_import_parts:
+            if not splitted_imps_to_add:
                 break
-            package, clname = classes_to_import_parts.pop()
-            if clname == '*' or package not in wildcard_package_map:
-                self.classes_to_import.append(get_full_module(package, clname))
+            imppath, impname = splitted_imps_to_add.pop()
+            if impname == '*' or imppath not in wildcard_path_map:
+                self.imps_to_add.append(
+                    get_full_imp(imppath, impname))
+
+        offset = 0
+        for mo in using_line_re.finditer(self.src_wo_imports):
+            self.src_wo_imports = \
+                self.src_wo_imports[:mo.start(0) - offset] + \
+                self.src_wo_imports[mo.end(0) - offset + 1:]
+            offset += mo.end(0) - mo.start(0) + 1
+
+        self.used_words_map = get_used_words_map(self.src_wo_imports)
+        self.used_typename_map = get_used_typename_map(self.src_wo_imports)
 
         if self.insert_pos == -1:
             self.insert_pos = self.get_insert_pos(src)
@@ -362,23 +411,25 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
 
     def on_select_class_to_import(self, index):
         if index == -1:
-            index = 0
-        clname = self.unimported_clnames_to_prompt[-1]
-        self.classes_to_import.append(
-            get_full_module(
-                HaxeOrganizeImports.build_class_map[clname][index],
-                clname))
+            self.clean()
+            return
 
-        self.unimported_clnames_to_prompt.pop()
+        impname = self.missing_impnames_to_prompt.pop()
+        self.imps_to_add.append(
+            get_full_imp(
+                HaxeOrganizeImports.build_type_map[impname][index],
+                impname))
 
-        if not self.unimported_clnames_to_prompt:
+        if not self.missing_impnames_to_prompt:
             self.complete_adding_unimported_classes()
         else:
             self.prompt_classes_to_import()
 
     def on_select_import_to_remove(self, index):
         if index == -1:
-            index = 0
+            self.clean()
+            return
+
         if index == 0:
             if self.add:
                 sublime.set_timeout(lambda: self.add_unimported_classes(), 10)
@@ -386,29 +437,29 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
                 sublime.set_timeout(lambda: self.complete_command(), 10)
             return
         elif index < 3:
-            for cl in self.classes_to_remove_map:
-                self.classes_to_remove_map[cl] = \
+            for imp in self.imp_to_remove_map:
+                self.imp_to_remove_map[imp] = \
                     True if index == 1 else False
         else:
-            cl = sorted(self.classes_to_remove_map.keys())[index - 3]
-            self.classes_to_remove_map[cl] = \
-                not self.classes_to_remove_map[cl]
+            imp = sorted(self.imp_to_remove_map.keys())[index - 3]
+            self.imp_to_remove_map[imp] = \
+                not self.imp_to_remove_map[imp]
 
         self.prompt_imports_to_remove(index)
 
     def prompt_classes_to_import(self):
-        clname = self.unimported_clnames_to_prompt[-1]
+        impname = self.missing_impnames_to_prompt[-1]
         options = []
 
-        for package in HaxeOrganizeImports.build_class_map[clname]:
-            options.append('import %s' % get_full_module(package, clname))
+        for package in HaxeOrganizeImports.build_type_map[impname]:
+            options.append('import %s' % get_full_imp(package, impname))
 
         show_quick_panel(
             self.window, options, self.on_select_class_to_import,
             sublime.MONOSPACE_FONT, 0)
 
     def prompt_imports_to_remove(self, selected_index=0):
-        if not self.classes_to_remove_map:
+        if not self.imp_to_remove_map:
             if self.add:
                 self.add_unimported_classes()
             else:
@@ -420,32 +471,32 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         options.append('Check All')
         options.append('Uncheck All')
 
-        sorted_classes = sorted(self.classes_to_remove_map.keys())
-        for cl in sorted_classes:
+        sorted_imps = sorted(self.imp_to_remove_map.keys())
+        for imp in sorted_imps:
             options.append(
                 '[%s] remove %s' %
-                ('x' if self.classes_to_remove_map[cl] else ' ', cl))
+                ('x' if self.imp_to_remove_map[imp] else ' ', imp))
 
         show_quick_panel(
             self.window, options, self.on_select_import_to_remove,
             sublime.MONOSPACE_FONT, selected_index)
 
     def remove_unused_imports(self):
-        used_classes = []
+        used_imps = []
 
-        for cl in self.classes_to_import:
-            if cl in used_classes:
+        for imp in self.imps_to_add:
+            if imp in used_imps:
                 continue
 
-            clname = cl.rpartition('.')[2]
-            if clname != '*':
-                if clname not in self.used_typename_map:
-                    self.classes_to_remove_map[cl] = True
+            impname = imp.rpartition('.')[2]
+            if impname != '*':
+                if impname not in self.used_words_map:
+                    self.imp_to_remove_map[imp] = True
                     continue
 
-            used_classes.append(cl)
+            used_imps.append(imp)
 
-        self.classes_to_import = used_classes
+        self.imps_to_add = used_imps
 
     def run(self, add=True, sort=True, remove=True, auto_remove=False):
         view = self.window.active_view()
@@ -459,7 +510,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         self.sort = sort
         self.remove = remove
 
-        if HaxeOrganizeImports.build_class_map is None:
+        if HaxeOrganizeImports.build_type_map is None:
             init_build_class_map(self.window.active_view())
 
         self.extract_imports()
@@ -474,35 +525,39 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
             self.complete_command()
 
     def search_unimported_classes(self):
+        self.missing_imps = []
+        self.missing_impnames_to_prompt = []
+        if HaxeOrganizeImports.build_type_map is None:
+            return
+
         src = get_view_src(self.window.active_view())
-        unimported_clname_map = {}
-        unimported_clnames_to_prompt_map = {}
+        unimported_typename_map = {}
+        unimported_typenames_to_prompt_map = {}
         imported_clname_map = \
-            get_imported_clname_map(src, self.ignored_class_map)
+            get_imported_clname_map(src, self.imp_to_ignore_map)
         declared_typename_map = get_declared_typename_map(src)
         cur_package = get_cur_package(src)
 
-        for clname in self.used_typename_map:
-            if clname not in HaxeOrganizeImports.build_class_map or \
-                    clname in imported_clname_map or \
-                    clname in declared_typename_map:
+        for typename in self.used_typename_map:
+            if typename not in HaxeOrganizeImports.build_type_map or \
+                    typename in imported_clname_map or \
+                    typename in declared_typename_map:
                 continue
 
-            if is_string(HaxeOrganizeImports.build_class_map[clname]):
-                package = HaxeOrganizeImports.build_class_map[clname]
+            if is_string(HaxeOrganizeImports.build_type_map[typename]):
+                package = HaxeOrganizeImports.build_type_map[typename]
 
                 if cur_package == package or package == '':
                     continue
 
-                unimported_clname_map[clname] = True
+                unimported_typename_map[typename] = True
             else:
-                unimported_clnames_to_prompt_map[clname] = True
+                unimported_typenames_to_prompt_map[typename] = True
 
-        self.unimported_classes = []
-        for clname in unimported_clname_map.keys():
-            self.unimported_classes.append(
-                get_full_module(
-                    HaxeOrganizeImports.build_class_map[clname], clname))
+        for typename in unimported_typename_map.keys():
+            self.missing_imps.append(
+                get_full_imp(
+                    HaxeOrganizeImports.build_type_map[typename], typename))
 
-        self.unimported_clnames_to_prompt = \
-            list(unimported_clnames_to_prompt_map.keys())
+        self.missing_impnames_to_prompt = \
+            list(unimported_typenames_to_prompt_map.keys())
