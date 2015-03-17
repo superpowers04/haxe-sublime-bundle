@@ -640,7 +640,7 @@
     <key>method-block</key>
     <dict>
       <key>begin</key>
-      <string>(\{)</string>
+      <string>(?&lt;=\{)</string>
       <key>beginCaptures</key>
       <dict>
         <key>1</key>
@@ -701,7 +701,15 @@
       <key>begin</key>
       <string>(?&lt;=\w)</string>
       <key>end</key>
-      <string>(?=[\{;])</string>
+      <string>([\{;])</string>
+      <key>endCaptures</key>
+      <dict>
+        <key>1</key>
+        <dict>
+          <key>name</key>
+          <string>punctuation.definition.block.begin.haxe.2</string>
+        </dict>
+      </dict>
       <key>patterns</key>
       <array>
         <dict>
@@ -1102,15 +1110,7 @@
     <key>type-abstract-block</key>
     <dict>
       <key>begin</key>
-      <string>(\{)</string>
-      <key>beginCaptures</key>
-      <dict>
-        <key>1</key>
-        <dict>
-          <key>name</key>
-          <string>punctuation.definition.block.begin.haxe.2</string>
-        </dict>
-      </dict>
+      <string>(?&lt;=\{)</string>
       <key>end</key>
       <string>(\})</string>
       <key>endCaptures</key>
@@ -1179,7 +1179,15 @@
       <key>begin</key>
       <string>(?&lt;=\w)</string>
       <key>end</key>
-      <string>(?=[\{;])</string>
+      <string>([\{;])</string>
+      <key>endCaptures</key>
+      <dict>
+        <key>1</key>
+        <dict>
+          <key>name</key>
+          <string>punctuation.definition.block.begin.haxe.2</string>
+        </dict>
+      </dict>
       <key>patterns</key>
       <array>
         <dict>
@@ -1239,15 +1247,7 @@
     <key>type-class-block</key>
     <dict>
       <key>begin</key>
-      <string>(\{)</string>
-      <key>beginCaptures</key>
-      <dict>
-        <key>1</key>
-        <dict>
-          <key>name</key>
-          <string>punctuation.definition.block.begin.haxe.2</string>
-        </dict>
-      </dict>
+      <string>(?&lt;=\{)</string>
       <key>end</key>
       <string>(\})</string>
       <key>endCaptures</key>
@@ -1316,7 +1316,15 @@
       <key>begin</key>
       <string>(?&lt;=\w)</string>
       <key>end</key>
-      <string>(?=[\{;])</string>
+      <string>([\{;])</string>
+      <key>endCaptures</key>
+      <dict>
+        <key>1</key>
+        <dict>
+          <key>name</key>
+          <string>punctuation.definition.block.begin.haxe.2</string>
+        </dict>
+      </dict>
       <key>patterns</key>
       <array>
         <dict>
@@ -1372,15 +1380,7 @@
     <key>type-enum-block</key>
     <dict>
       <key>begin</key>
-      <string>(\{)</string>
-      <key>beginCaptures</key>
-      <dict>
-        <key>1</key>
-        <dict>
-          <key>name</key>
-          <string>punctuation.definition.block.begin.haxe.2</string>
-        </dict>
-      </dict>
+      <string>(?&lt;=\{)</string>
       <key>end</key>
       <string>(\})</string>
       <key>endCaptures</key>
@@ -1433,7 +1433,15 @@
       <key>begin</key>
       <string>(?&lt;=\w)</string>
       <key>end</key>
-      <string>(?=[\{;])</string>
+      <string>([\{;])</string>
+      <key>endCaptures</key>
+      <dict>
+        <key>1</key>
+        <dict>
+          <key>name</key>
+          <string>punctuation.definition.block.begin.haxe.2</string>
+        </dict>
+      </dict>
       <key>patterns</key>
       <array>
         <dict>
@@ -1485,15 +1493,7 @@
     <key>type-interface-block</key>
     <dict>
       <key>begin</key>
-      <string>(\{)</string>
-      <key>beginCaptures</key>
-      <dict>
-        <key>1</key>
-        <dict>
-          <key>name</key>
-          <string>punctuation.definition.block.begin.haxe.2</string>
-        </dict>
-      </dict>
+      <string>(?&lt;=\{)</string>
       <key>end</key>
       <string>(\})</string>
       <key>endCaptures</key>
@@ -1554,7 +1554,15 @@
       <key>begin</key>
       <string>(?&lt;=\w)</string>
       <key>end</key>
-      <string>(?=[\{;])</string>
+      <string>([\{;])</string>
+      <key>endCaptures</key>
+      <dict>
+        <key>1</key>
+        <dict>
+          <key>name</key>
+          <string>punctuation.definition.block.begin.haxe.2</string>
+        </dict>
+      </dict>
       <key>patterns</key>
       <array>
         <dict>
@@ -1610,15 +1618,7 @@
     <key>type-typedef-block</key>
     <dict>
       <key>begin</key>
-      <string>(\{)</string>
-      <key>beginCaptures</key>
-      <dict>
-        <key>1</key>
-        <dict>
-          <key>name</key>
-          <string>punctuation.definition.block.begin.haxe.2</string>
-        </dict>
-      </dict>
+      <string>(?&lt;=\{)</string>
       <key>end</key>
       <string>(\})</string>
       <key>endCaptures</key>
@@ -1671,7 +1671,15 @@
       <key>begin</key>
       <string>(?&lt;=\w)</string>
       <key>end</key>
-      <string>(?=[\{;])</string>
+      <string>([\{;])</string>
+      <key>endCaptures</key>
+      <dict>
+        <key>1</key>
+        <dict>
+          <key>name</key>
+          <string>punctuation.definition.block.begin.haxe.2</string>
+        </dict>
+      </dict>
       <key>patterns</key>
       <array>
         <dict>
