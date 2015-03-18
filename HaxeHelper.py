@@ -14,7 +14,10 @@ import re
 
 
 def HaxeComplete_inst():
-    from .HaxeComplete import HaxeComplete
+    try:  # Python 3
+        from .HaxeComplete import HaxeComplete
+    except (ValueError):  # Python 2
+        from HaxeComplete import HaxeComplete
     return HaxeComplete.inst
 
 spaceChars = re.compile("\s")
