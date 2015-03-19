@@ -143,7 +143,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         cmds = []
 
         def add(name, field):
-            label = '…' if name is None else name
+            label = '...' if name is None else name
             cmds.append((
                 '%s %s' % (field, label),
                 'haxe_generate_field',
