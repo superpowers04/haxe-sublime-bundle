@@ -1,5 +1,17 @@
 [
     {
+        "keys": ["ctrl+shift+1"],
+        "command": "haxe_generate_code",
+        "context":
+        [
+            {
+                "key": "selector",
+                "operator": "equal",
+                "operand": "source.haxe.2,source.hxml,source.nmml,source.erazor"
+            }
+        ]
+    },
+    {
         "keys": ["ctrl+shift+b"],
         "command": "haxe_select_build",
         "context":
