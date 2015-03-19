@@ -5,7 +5,7 @@
 	<key>name</key>
 	<string>Symbol List: Show</string>
 	<key>scope</key>
-	<string>source.haxe.2 meta.static,source.haxe.2 meta.method.name.haxe.2,source.haxe.2 meta.variable.haxe.2,source.haxe.2 meta.class.name.haxe.2</string>
+	<string>source.haxe.2 meta.static,source.haxe.2 meta.method.name.haxe.2,source.haxe.2 meta.variable.haxe.2,source.haxe.2 meta.type.name.haxe.2</string>
 	<key>settings</key>
 	<dict>
 		<key>showInSymbolList</key>

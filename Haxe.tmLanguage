@@ -610,15 +610,7 @@
       <key>begin</key>
       <string>(?=function)</string>
       <key>end</key>
-      <string>(?&lt;=\})|(;)</string>
-      <key>endCaptures</key>
-      <dict>
-        <key>1</key>
-        <dict>
-          <key>name</key>
-          <string>punctuation.terminator.haxe.2</string>
-        </dict>
-      </dict>
+      <string>(?&lt;=[\};])</string>
       <key>name</key>
       <string>meta.method.haxe.2</string>
       <key>patterns</key>
@@ -701,13 +693,18 @@
       <key>begin</key>
       <string>(?&lt;=\w)</string>
       <key>end</key>
-      <string>([\{;])</string>
+      <string>(\{)|(;)</string>
       <key>endCaptures</key>
       <dict>
         <key>1</key>
         <dict>
           <key>name</key>
           <string>punctuation.definition.block.begin.haxe.2</string>
+        </dict>
+        <key>2</key>
+        <dict>
+          <key>name</key>
+          <string>punctuation.terminator.haxe.2</string>
         </dict>
       </dict>
       <key>patterns</key>
@@ -1090,7 +1087,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.abstract.haxe.2</string>
+      <string>meta.type.abstract.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1121,6 +1118,8 @@
           <string>punctuation.definition.block.end.haxe.2</string>
         </dict>
       </dict>
+      <key>name</key>
+      <string>meta.type.block.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1172,7 +1171,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.class.name.haxe.2</string>
+      <string>meta.type.name.haxe.2</string>
     </dict>
     <key>type-abstract-name-post</key>
     <dict>
@@ -1227,7 +1226,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.class.haxe.2</string>
+      <string>meta.type.class.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1258,6 +1257,8 @@
           <string>punctuation.definition.block.end.haxe.2</string>
         </dict>
       </dict>
+      <key>name</key>
+      <string>meta.type.block.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1309,7 +1310,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.class.name.haxe.2</string>
+      <string>meta.type.name.haxe.2</string>
     </dict>
     <key>type-class-name-post</key>
     <dict>
@@ -1360,7 +1361,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.enum.haxe.2</string>
+      <string>meta.type.enum.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1391,6 +1392,8 @@
           <string>punctuation.definition.block.end.haxe.2</string>
         </dict>
       </dict>
+      <key>name</key>
+      <string>meta.type.block.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1426,7 +1429,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.class.name.haxe.2</string>
+      <string>meta.type.name.haxe.2</string>
     </dict>
     <key>type-enum-name-post</key>
     <dict>
@@ -1473,7 +1476,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.interface.haxe.2</string>
+      <string>meta.type.interface.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1504,6 +1507,8 @@
           <string>punctuation.definition.block.end.haxe.2</string>
         </dict>
       </dict>
+      <key>name</key>
+      <string>meta.type.block.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1547,7 +1552,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.class.name.haxe.2</string>
+      <string>meta.type.name.haxe.2</string>
     </dict>
     <key>type-interface-name-post</key>
     <dict>
@@ -1598,7 +1603,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.typedef.haxe.2</string>
+      <string>meta.type.typedef.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1629,6 +1634,8 @@
           <string>punctuation.definition.block.end.haxe.2</string>
         </dict>
       </dict>
+      <key>name</key>
+      <string>meta.type.block.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
@@ -1664,7 +1671,7 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.class.name.haxe.2</string>
+      <string>meta.type.name.haxe.2</string>
     </dict>
     <key>type-typedef-name-post</key>
     <dict>
@@ -1741,7 +1748,7 @@
         </dict>
       </dict>
       <key>end</key>
-      <string>(\w+)</string>
+      <string>([_a-z]\w*)</string>
       <key>endCaptures</key>
       <dict>
         <key>1</key>
@@ -1751,30 +1758,16 @@
         </dict>
       </dict>
       <key>name</key>
-      <string>meta.variable.haxe.2</string>
+      <string>meta.variable.name.haxe.2</string>
     </dict>
     <key>variable-name-post</key>
     <dict>
       <key>begin</key>
       <string>(?&lt;=\w)</string>
-      <key>beginCaptures</key>
-      <dict>
-        <key>1</key>
-        <dict>
-          <key>name</key>
-          <string>storage.type.variable.haxe.2</string>
-        </dict>
-      </dict>
       <key>end</key>
       <string>(?=;)</string>
-      <key>endCaptures</key>
-      <dict>
-        <key>1</key>
-        <dict>
-          <key>name</key>
-          <string>entity.name.variable.haxe.2</string>
-        </dict>
-      </dict>
+      <key>name</key>
+      <string>meta.post.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
