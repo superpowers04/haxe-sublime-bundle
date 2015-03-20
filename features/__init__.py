@@ -10,6 +10,7 @@ from .haxe_add_hxml import HaxeAddHxml
 from .haxe_generate_code import HaxeGenerateCode
 from .haxe_generate_code_helper import HaxeGenerateCodeEdit
 from .haxe_generate_field import HaxeGenerateField
+from .haxe_extract_var import HaxeExtractVar
 from .haxe_organize_imports import HaxeOrganizeImports, HaxeOrganizeImportsEventListener, HaxeOrganizeImportsEdit
 
 print("Haxe : Reloading haxe module")
@@ -26,5 +27,6 @@ __all__ = [
     'HaxeOrganizeImports',
     'HaxeGenerateCodeEdit',
     'HaxeGenerateField',
+    'HaxeExtractVar',
     'HaxeGenerateCode',
 ]

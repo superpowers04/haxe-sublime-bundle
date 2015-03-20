@@ -1,5 +1,9 @@
 import sublime_plugin
-from .haxe_generate_code_helper import *
+
+try:  # Python 3
+    from .haxe_generate_code_helper import *
+except (ValueError):  # Python 2
+    from haxe_generate_code_helper import *
 
 
 class HaxeGenerateField(sublime_plugin.WindowCommand):

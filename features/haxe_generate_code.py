@@ -1,11 +1,20 @@
 import sublime
 import sublime_plugin
-from .haxe_generate_field import *
+
+try:  # Python 3
+    from .haxe_extract_var import *
+    from .haxe_generate_field import *
+    from .haxe_generate_code_helper import *
+except (ValueError):  # Python 2
+    from haxe_extract_var import *
+    from haxe_generate_field import *
+    from haxe_generate_code_helper import *
 
 
 class HaxeGenerateCode(sublime_plugin.WindowCommand):
 
     gens = [
+        HaxeExtractVar,
         HaxeGenerateField
     ]
 
@@ -41,6 +50,4 @@ class HaxeGenerateCode(sublime_plugin.WindowCommand):
         for cmd in self.cmds:
             items.append(cmd[0])
 
-        win.show_quick_panel(
-            items,
-            self.on_select, sublime.MONOSPACE_FONT, 0)
+        win.show_quick_panel(items, self.on_select)

@@ -5,6 +5,7 @@ import re
 SCOPE_VAR = 'meta.variable.haxe.2'
 SCOPE_VAR_NAME = 'entity.name.variable.haxe.2'
 SCOPE_FUNC = 'meta.method.haxe.2'
+SCOPE_FUNC_BLOCK = 'meta.method.block.haxe.2'
 SCOPE_FUNC_NAME = 'entity.name.function.haxe.2'
 SCOPE_STATIC = 'meta.static.haxe.2'
 SCOPE_TYPE = 'meta.type'
@@ -93,6 +94,7 @@ def find_regions(view, selector, in_region=None, incl_string=False):
 
 def get_context(view):
     ctx = {}
+    ctx['view'] = view
 
     pos = view.sel()[0].begin()
     ctx['scope'] = view.scope_name(pos)
@@ -103,6 +105,20 @@ def get_context(view):
 
     if SCOPE_TYPE in ctx['scope']:
         ctx['type'] = get_context_type(view, ctx['scope'])
+
+    if SCOPE_FUNC in ctx['scope']:
+        ctx['function'] = get_context_function(view)
+
+    return ctx
+
+
+def get_context_function(view):
+    ctx = {}
+
+    rgn = find_cur_region(view, SCOPE_FUNC)
+    ctx['region'] = rgn
+    ctx['name'] = find_regions(view, SCOPE_FUNC_NAME, rgn, True)[0][1]
+    ctx['block'] = find_regions(view, SCOPE_FUNC_BLOCK, rgn)[0]
 
     return ctx
 
@@ -164,7 +180,8 @@ def get_context_word(view):
     if not re_word.match(word):
         return None
 
-    ignore_scopes = ('constant', 'keyword', 'storage', 'entity')
+    ignore_scopes = (
+        'comment', 'constant', 'entity', 'keyword', 'storage', 'string')
     for sc in ignore_scopes:
         if sc in scope:
             return None
