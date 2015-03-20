@@ -651,6 +651,8 @@
           <string>punctuation.definition.block.end.haxe.2</string>
         </dict>
       </dict>
+      <key>name</key>
+      <string>meta.method.block.haxe.2</string>
       <key>patterns</key>
       <array>
         <dict>
