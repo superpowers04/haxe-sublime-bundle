@@ -3,6 +3,25 @@
 	"auto_complete_triggers": [ {"selector": "source.haxe.2", "characters": "."} ],
 	"haxe_build_server_mode" : true,
 	"haxe_smart_snippets" : true,
+	
+	/*
+		Fields order:
+		V - static variables
+		F - static functions
+		v - variables
+		f - functions
+	*/
+	"haxe_fields_order" : "VFvf",
+	
+	/*
+		Modifiers order:
+		o - override
+		p - private or public
+		i - inline
+		s - static
+	*/
+	"haxe_modifiers_order" : "opis",
+	
 	"haxe_use_cache" : true
 	
 	// ,"haxe_path" : "/usr/bin/haxe"
