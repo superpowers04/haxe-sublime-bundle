@@ -1415,7 +1415,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             self.serverMode = float(ver.group(3)) * 100 >= 209
 
             if use_cache:
-                cache_filename = 'std%s.cache' % ver.group(2)
+                cache_filename = 'haxe%s.cache' % ver.group(2)
                 cached_std = cache(cache_filename)
             if cached_std is not None:
                 cp = cached_std.split(';')
@@ -1518,7 +1518,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if cwd is None :
             cwd = os.path.dirname( build.hxml )
 
-        
+
 
         buildServerMode = settings.get('haxe_build_server_mode', True)
         completionServerMode = settings.get('haxe_completion_server_mode',True)
