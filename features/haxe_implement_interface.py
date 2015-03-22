@@ -31,7 +31,6 @@ def is_package(package):
 
 
 def is_string(value):
-    # return type(value) == type(' ')isString = False;
     val = False
     try:
         val = isinstance(value, str)
