@@ -179,7 +179,14 @@ def is_package(package):
 
 
 def is_string(value):
-    return type(value) == type(' ')
+    # return type(value) == type(' ')isString = False;
+    val = False
+    try:
+        val = isinstance(value, str)
+    except NameError:
+        val = isinstance(value, basestring)
+
+    return val
 
 
 def is_type(name):
@@ -408,6 +415,13 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
             self.empty_lines_before = '\n\n'
 
         return pos
+
+    @staticmethod
+    def get_type_map(view):
+        if HaxeOrganizeImports.build_type_map is None:
+            init_build_class_map(view)
+
+        return HaxeOrganizeImports.build_type_map
 
     def on_select_class_to_import(self, index):
         if index == -1:
