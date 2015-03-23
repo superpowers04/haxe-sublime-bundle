@@ -21,6 +21,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         if self.text is None:
             self.text = self.get_text()
 
+        self.text = format_statement(view, self.text)
         self.text = ''.join((pre, self.text, post))
 
         self.window.run_command(

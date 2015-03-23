@@ -22,6 +22,15 @@
 	*/
 	"haxe_modifiers_order" : "opis",
 	
+	/*
+		Whitespace style used in generated code
+		Examples:
+		"function f ( a : T < T > , b : T = null ) : T -> T;"
+		"function f ( a:T<T> , b:T=null ):T->T;"
+		"function f(a:T<T>, b:T = null):T->T;"
+	*/
+	"haxe_whitespace_style" : "function f(a:T<T>, b:T = null):T->T;",
+	
 	"haxe_use_cache" : true
 	
 	// ,"haxe_path" : "/usr/bin/haxe"

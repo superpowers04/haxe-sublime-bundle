@@ -18,7 +18,7 @@ re_comments = re.compile(
 re_implements = re.compile(r'implements\s+([\w\.]+)', re.MULTILINE)
 re_field = re.compile(r'(var|function)\s+(\w+)[^;]*;', re.MULTILINE)
 re_import = re.compile(r'import\s+([\w\.*]+)[^;]*;', re.MULTILINE)
-re_return = re.compile(r':\s*([\w\.]+);', re.MULTILINE)
+re_return = re.compile(r'\)\s*:\s*([\w\.<>-]+);', re.MULTILINE)
 
 
 def is_full_path(path):
