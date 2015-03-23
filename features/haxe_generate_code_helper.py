@@ -171,6 +171,17 @@ def get_context_type(view, scope):
     return ctx
 
 
+def get_fieldnames(context):
+    lst = []
+
+    lst.extend([tup[1] for tup in context['type'][FIELD_VAR]])
+    lst.extend([tup[1] for tup in context['type'][FIELD_STATIC_VAR]])
+    lst.extend([tup[1] for tup in context['type'][FIELD_FUNC]])
+    lst.extend([tup[1] for tup in context['type'][FIELD_STATIC_FUNC]])
+
+    return lst
+
+
 def get_context_word(view):
     pos = view.sel()[0].begin()
     word_rgn = view.word(pos)

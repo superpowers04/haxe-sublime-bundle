@@ -53,7 +53,10 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
             return lst
 
         for mo in re_field.finditer(src):
-            lst.append((mo.group(1), mo.group(2), 'public ' + mo.group(0)))
+            name = mo.group(2)
+            if name in self.fieldnames:
+                continue
+            lst.append((mo.group(1), name, 'public ' + mo.group(0)))
 
         return lst
 
@@ -211,7 +214,7 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
         cmds = []
 
         cmds.append((
-            'Implement Methods and Variables',
+            'Implement Interface',
             'haxe_implement_interface',
             {}))
 
@@ -227,6 +230,7 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
         if context is None:
             context = get_context(view)
         self.context = context
+        self.fieldnames = get_fieldnames(self.context)
 
         if 'type' not in context:
             return

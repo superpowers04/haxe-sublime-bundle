@@ -11,6 +11,9 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
     def complete(self):
         view = self.window.active_view()
 
+        if self.name in get_fieldnames(self.context):
+            return
+
         pos, pre, post = self.find_insert_pos(view, self.field, self.name)
         if post:
             pre = ''
@@ -23,6 +26,8 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         self.window.run_command(
             'haxe_generate_code_edit',
             {'text': self.text, 'pos': pos})
+
+        self.context = None
 
     def find_insert_pos(self, view, field_type, field_name):
         pos_order = self.get_fields_order()
