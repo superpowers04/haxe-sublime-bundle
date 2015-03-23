@@ -447,6 +447,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
     selectingBuild = False
     builds = []
     errors = []
+    haxe_settings_file = 'Preferences.sublime-settings'
 
     currentCompletion = {
         "inp" : None,
@@ -1062,12 +1063,19 @@ class HaxeComplete( sublime_plugin.EventListener ):
     def select_nme_target( self, i, view ):
         target = HaxeBuild.nme_targets[i]
 
+        self.haxe_settings.set('haxe_nme_target', i)
+        sublime.save_settings(self.haxe_settings_file)
+
         if self.currentBuild.nmml is not None:
             HaxeBuild.nme_target = target
             view.set_status( "haxe-build" , self.currentBuild.to_string() )
 
     def select_flambe_target( self , i , view ):
         target = HaxeBuild.flambe_targets[i]
+
+        self.haxe_settings.set('haxe_flambe_target', i)
+        sublime.save_settings(self.haxe_settings_file)
+
         if self.currentBuild.yaml is not None:
             HaxeBuild.flambe_target = target
             view.set_status( "haxe-build" , self.currentBuild.to_string() )
@@ -1385,7 +1393,29 @@ class HaxeComplete( sublime_plugin.EventListener ):
         HaxeLib.scan( view )
 
         settings = view.settings()
+        self.haxe_settings = sublime.load_settings(self.haxe_settings_file)
         haxepath = settings.get("haxe_path","haxe")
+
+        nme_target_idx = 0
+        try:
+            nme_target_idx = int(self.haxe_settings.get('haxe_nme_target', 0))
+            if nme_target_idx < 0 or \
+                    nme_target_idx >= len(HaxeBuild.nme_targets):
+                nme_target_idx = 0
+        except:
+            pass
+        HaxeBuild.nme_target = HaxeBuild.nme_targets[nme_target_idx]
+
+        flambe_target_idx = 0
+        try:
+            flambe_target_idx = int(
+                self.haxe_settings.get('haxe_flambe_target', 0))
+            if flambe_target_idx < 0 or \
+                    flambe_target_idx >= len(HaxeBuild.flambe_targets):
+                flambe_target_idx = 0
+        except:
+            pass
+        HaxeBuild.flambe_target = HaxeBuild.flambe_targets[flambe_target_idx]
 
         out, err = runcmd( [haxepath, "-main", "Nothing", "-v", "--no-output"] )
 
@@ -1518,7 +1548,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if cwd is None :
             cwd = os.path.dirname( build.hxml )
 
-        
+
 
         buildServerMode = settings.get('haxe_build_server_mode', True)
         completionServerMode = settings.get('haxe_completion_server_mode',True)
