@@ -7,9 +7,11 @@ from os.path import basename
 try:  # Python 3
     from ..HaxeHelper import packageLine, show_quick_panel, \
         typeDecl, HaxeComplete_inst
+    from .haxe_generate_code_helper import count_blank_lines
 except (ValueError):  # Python 2
     from HaxeHelper import packageLine, show_quick_panel, \
         typeDecl, HaxeComplete_inst
+    from haxe_generate_code_helper import count_blank_lines
 
 
 type_re = re.compile('[\w.]*[A-Z]\w*')
@@ -215,13 +217,24 @@ def search_conditional_regions(src):
 class HaxeOrganizeImportsEdit(sublime_plugin.TextCommand):
 
     def insert_imports(self, edit):
+        view = self.view
         imps = HaxeOrganizeImports.active_inst.imps_to_add
         if not imps:
             return
 
         pos = HaxeOrganizeImports.active_inst.insert_pos
         indent = HaxeOrganizeImports.active_inst.indent
-        ins = HaxeOrganizeImports.active_inst.empty_lines_before
+        ins = ''
+
+        before, after = count_blank_lines(view, pos)
+        print(before, after)
+
+        next_line_pos = view.full_line(pos).end()
+        for i in range(0, after - 1):
+            view.erase(edit, view.full_line(next_line_pos))
+
+        for i in range(0, 2 - before):
+            ins += '\n'
 
         for imp in imps:
             ins += '%simport %s;\n' % (indent, imp)
@@ -350,7 +363,6 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         self.imp_to_remove_map = {}
         self.imp_to_ignore_map = {}
         self.indent = ''
-        self.empty_lines_before = ''
         self.insert_pos = -1
         self.imps_to_add = []
         splitted_imps_to_add = []
@@ -411,7 +423,6 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         pos = 0
         if mo is not None:
             pos = mo.end(0)
-            self.empty_lines_before = '\n\n'
 
         return pos
 

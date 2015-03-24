@@ -27,6 +27,7 @@ re_format_comma = re.compile('\s*,\s*')
 re_format_assign = re.compile('\s*=\s*')
 re_format_type_sep = re.compile('\s*->\s*')
 re_format_semicolon = re.compile('\s*;')
+
 re_word = re.compile('^[_a-z]\w*$')
 re_whitespace_style = re.compile(
     'function f(\s*)\((\s*)'
@@ -34,6 +35,28 @@ re_whitespace_style = re.compile(
     'b\s*:\s*T(\s*)=(\s*)null(\s*)'
     '\)\s*:\s*T(\s*)->(\s*)T(\s*);')
 whitespace_style = None
+
+
+def count_blank_lines(view, pos):
+    whitespaces = ' \t'
+    src = view.substr(sublime.Region(0, view.size()))
+    before, after = 0, 0
+
+    for i in range(pos - 1, 0, -1):
+        c = src[i]
+        if c == '\n':
+            before += 1
+        elif c not in whitespaces:
+            break
+
+    for i in range(pos, view.size()):
+        c = src[i]
+        if c == '\n':
+            after += 1
+        elif c not in whitespaces:
+            break
+
+    return before, after
 
 
 def filter_regions(inners, outers):
