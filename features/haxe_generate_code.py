@@ -3,10 +3,12 @@ import sublime_plugin
 
 try:  # Python 3
     from .haxe_extract_var import *
+    from .haxe_implement_interface import *
     from .haxe_generate_field import *
     from .haxe_generate_code_helper import *
 except (ValueError):  # Python 2
     from haxe_extract_var import *
+    from haxe_implement_interface import *
     from haxe_generate_field import *
     from haxe_generate_code_helper import *
 
@@ -15,6 +17,7 @@ class HaxeGenerateCode(sublime_plugin.WindowCommand):
 
     gens = [
         HaxeExtractVar,
+        HaxeImplementInterface,
         HaxeGenerateField
     ]
 

@@ -11,15 +11,24 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
     def complete(self):
         view = self.window.active_view()
 
+        if self.name in get_fieldnames(self.context):
+            return
+
         pos, pre, post = self.find_insert_pos(view, self.field, self.name)
         if post:
             pre = ''
 
-        text = ''.join((pre, self.get_text(self.name), post))
+        if self.text is None:
+            self.text = self.get_text()
+
+        self.text = format_statement(view, self.text)
+        self.text = ''.join((pre, self.text, post))
 
         self.window.run_command(
             'haxe_generate_code_edit',
-            {'text': text, 'pos': pos})
+            {'text': self.text, 'pos': pos})
+
+        self.context = None
 
     def find_insert_pos(self, view, field_type, field_name):
         pos_order = self.get_fields_order()
@@ -119,7 +128,8 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
         return order
 
-    def get_text(self, name):
+    def get_text(self):
+        name = self.name
         mod, idx = self.get_mod(
             name, False, True,
             self.context['type']['group'] == 'abstract', self.static)
@@ -149,7 +159,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         def add(name, field):
             label = '...' if name is None else name
             cmds.append((
-                '%s %s' % (field, label),
+                'New %s %s' % (field, label),
                 'haxe_generate_field',
                 {'name': name, 'field': field}))
 
@@ -166,7 +176,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
         return cmds
 
-    def run(self, context=None, name=None, field=FIELD_VAR):
+    def run(self, context=None, name=None, field=FIELD_VAR, text=None):
         win = self.window
         view = win.active_view()
 
@@ -179,6 +189,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         self.name = name
         self.field = field
         self.static = 'static' in field
+        self.text = text
 
         if 'type' not in context:
             return
