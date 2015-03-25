@@ -1518,7 +1518,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if cwd is None :
             cwd = os.path.dirname( build.hxml )
 
-        
+
 
         buildServerMode = settings.get('haxe_build_server_mode', True)
         completionServerMode = settings.get('haxe_completion_server_mode',True)
@@ -2135,6 +2135,16 @@ class HaxeExecCommand(ExecCommand):
             # Catches "path" and "shell"
             **kwargs):
 
+
+        if int(sublime.version()) >= 3080:
+            # clear the text_queue
+            self.text_queue_lock.acquire()
+            try:
+                self.text_queue.clear()
+                self.text_queue_proc = None
+            finally:
+                self.text_queue_lock.release()
+
         if kill:
             if self.proc:
                 self.proc.kill()
@@ -2209,7 +2219,15 @@ class HaxeExecCommand(ExecCommand):
 
         try:
             # Forward kwargs to AsyncProcess
-            if int(sublime.version()) >= 3000 :
+            if int(sublime.version()) >= 3080 :
+                self.proc = AsyncProcess(cmd, shell_cmd, merged_env, self, **kwargs)
+
+                self.text_queue_lock.acquire()
+                try:
+                    self.text_queue_proc = self.proc
+                finally:
+                    self.text_queue_lock.release()
+            elif int(sublime.version()) >= 3000 :
                 self.proc = AsyncProcess(cmd, None, merged_env, self, **kwargs)
             else :
 
@@ -2230,7 +2248,20 @@ class HaxeExecCommand(ExecCommand):
         return false
 
     def on_data(self, proc, data):
-        sublime.set_timeout(functools.partial(self.append_data, proc, data), 0)
+        if int(sublime.version()) >= 3080:
+            try:
+                str = data.decode(self.encoding)
+            except:
+                str = "[Decode error - output not " + self.encoding + "]\n"
+                proc = None
+
+            # Normalize newlines, Sublime Text always uses a single \n separator
+            # in memory.
+            str = str.replace('\r\n', '\n').replace('\r', '\n')
+
+            self.append_string(proc, str)
+        else:
+            sublime.set_timeout(functools.partial(self.append_data, proc, data), 0)
 
     def on_finished(self, proc):
         sublime.set_timeout(functools.partial(self.finish, proc), 1)
