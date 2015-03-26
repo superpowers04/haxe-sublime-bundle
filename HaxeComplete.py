@@ -1025,7 +1025,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def set_current_build( self , view , id , forcePanel ) :
-        if i == -1:
+        if id == -1:
             return
 
         if id >= len(self.builds) :
