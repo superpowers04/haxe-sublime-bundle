@@ -1025,8 +1025,10 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def set_current_build( self , view , id , forcePanel ) :
+        if i == -1:
+            return
 
-        if id < 0 or id >= len(self.builds) :
+        if id >= len(self.builds) :
             id = 0
 
         view.settings().set( "haxe-build-id" , id )
@@ -1061,6 +1063,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def select_nme_target( self, i, view ):
+        if i == -1:
+            return
+
         target = HaxeBuild.nme_targets[i]
 
         self.haxe_settings.set('haxe_nme_target', i)
@@ -1071,6 +1076,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
             view.set_status( "haxe-build" , self.currentBuild.to_string() )
 
     def select_flambe_target( self , i , view ):
+        if i == -1:
+            return
+
         target = HaxeBuild.flambe_targets[i]
 
         self.haxe_settings.set('haxe_flambe_target', i)
