@@ -1178,7 +1178,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 else :
                     tarPkg = "flash8"
 
-        if not build.openfl and not build.lime and build.nmml is not None or HaxeLib.get("nme") in build.libs :
+        if not build.openfl and not build.lime and build.nmml is not None or "nme" in HaxeLib.available and HaxeLib.get("nme") in build.libs :
             tarPkg = "nme"
             targetPackages.extend( ["jeash","neash","browser","native"] )
 
@@ -1969,11 +1969,16 @@ class HaxeComplete( sublime_plugin.EventListener ):
             if prevSymbol == prevComa:
                 closedPars = 0
                 closedBrackets = 0
+                closedSquares = 0
 
                 for i in range( prevComa , 0 , -1 ) :
                     c = src[i]
 
-                    if c == ")" :
+                    if c == "]" :
+                        closedSquares += 1
+                    elif c == "[" :
+                        closedSquares -= 1
+                    elif c == ")" :
                         closedPars += 1
                     elif c == "(" :
                         if closedPars < 1 :
@@ -1982,7 +1987,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
                         else :
                             closedPars -= 1
                     elif c == "," :
-                        if closedPars == 0 and closedBrackets == 0 :
+                        if closedPars == 0 and closedBrackets == 0 and closedSquares == 0:
                             commas += 1
                     elif c == "{" : # TODO : check for { ... , ... , ... } to have the right comma count
                         closedBrackets -= 1
@@ -1995,7 +2000,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 #print("commas : " + str(commas))
                 #print("closedBrackets : " + str(closedBrackets))
                 #print("closedPars : " + str(closedPars))
-                if closedBrackets < 0 :
+                if closedBrackets < 0 or closedSquares < 0 :
                     show_hints = False
             else :
 
@@ -2008,11 +2013,11 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         toplevelComplete = toplevelComplete or completeChar in ":(," or inControlStruct
 
-        if toplevelComplete :
+        # if toplevelComplete :
             #print("toplevel")
-            offset = userOffset
-        else :
-            offset = completeOffset
+        #     offset = userOffset
+        # else :
+        offset = completeOffset
             #print(comps)
 
         if src[offset-1]=="." and src[offset-2] in ".1234567890" :
