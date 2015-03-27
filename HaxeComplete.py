@@ -373,72 +373,6 @@ class HaxeSelectBuild( sublime_plugin.TextCommand ):
         complete.select_build( view )
 
 
-class HaxeHint( sublime_plugin.TextCommand ):
-    def run( self , edit , input = "" ) :
-        complete = HaxeComplete.inst
-        view = self.view
-
-        if input == "(":
-            sel = view.sel()
-            emptySel = True
-            for r in sel :
-                if not r.empty() :
-                    emptySel = False
-                    break
-
-            autoMatch = view.settings().get("auto_match_enabled",False)
-
-            if autoMatch :
-                if emptySel :
-                    view.run_command( "insert_snippet" , {
-                        "contents" : "($0)"
-                    })
-                else :
-                    view.run_command( "insert_snippet" , {
-                        "contents" : "(${0:$SELECTION})"
-                    })
-            else :
-                view.run_command("insert" , {
-                    "characters" : "("
-                })
-        else :
-            view.run_command("insert" , {
-                "characters" : input
-            })
-
-        autocomplete = view.settings().get("auto_complete",True)
-        if not autocomplete :
-            return
-
-        for r in view.sel() :
-            comps, hints = complete.get_haxe_completions( self.view , r.end() )
-
-            fn_name = complete.get_current_fn_name(self.view, r.end())
-
-            if view.settings().get("haxe_smart_snippets",False) :
-                snippet = ""
-                i = 1
-                for h in hints :
-                    var = str(i)+": " + h + " ";
-                    var = var.replace("{","\{")
-                    var = var.replace("}","\}")
-                    if snippet == "":
-                        snippet = var
-                    else:
-                        snippet = snippet + ",${" + var + "}"
-                    i = i+1
-
-                #print( hints )
-                view.run_command( "insert_snippet" , {
-                    "contents" : "${"+snippet+"}"
-                })
-
-            #view.set_status("haxe-status", status)
-            #sublime.status_message(status)
-            #if( len(comps) > 0 ) :
-            #   view.run_command('auto_complete', {'disable_auto_insert': True})
-
-
 class HaxeComplete( sublime_plugin.EventListener ):
 
     #folder = ""
@@ -1664,9 +1598,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
             for i in tree.getiterator("type") :
                 hint = i.text.strip()
 
-                if mode == "type":
-                    return hint
-
                 spl = hint.split(" -> ")
 
                 types = [];
@@ -1684,7 +1615,19 @@ class HaxeComplete( sublime_plugin.EventListener ):
                         types.append( " -> ".join( currentType ) )
                         currentType = []
 
+                for i in range(0, len(types)):
+                    types[i] = types[i].replace('(', '')
+                    types[i] = types[i].replace(')', '')
+
                 ret = types.pop()
+
+                if mode == "type":
+                    hint = ret
+                    if types:
+                        hint = ','.join(types)
+                        hint = '(%s):%s' % (hint, ret)
+                    return hint
+
                 msg = "";
 
                 if commas >= len(types) :
