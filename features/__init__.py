@@ -14,6 +14,7 @@ from .haxe_extract_var import HaxeExtractVar
 from .haxe_hint import HaxeHint, HaxeShowPopup, HaxeColorScheme
 from .haxe_implement_interface import HaxeImplementInterface
 from .haxe_organize_imports import HaxeOrganizeImports, HaxeOrganizeImportsEventListener, HaxeOrganizeImportsEdit
+from .haxe_reload_modules import reload_modules
 
 print("Haxe : Reloading haxe module")
 
@@ -35,4 +36,5 @@ __all__ = [
     'HaxeColorScheme',
     'HaxeShowPopup',
     'HaxeHint',
+    'reload_modules',
 ]
