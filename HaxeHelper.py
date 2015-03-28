@@ -12,13 +12,20 @@ import shlex
 import re
 
 
-
 def HaxeComplete_inst():
     try:  # Python 3
         from .HaxeComplete import HaxeComplete
     except (ValueError):  # Python 2
         from HaxeComplete import HaxeComplete
     return HaxeComplete.inst
+
+
+# Reload modules
+reloader = 'features.haxe_reload_modules'
+if sys.version_info >= (3,):
+    reloader = 'Haxe.' + reloader
+if reloader in sys.modules:
+    sys.modules[reloader].reload_modules()
 
 spaceChars = re.compile("\s")
 wordChars = re.compile("[a-z0-9._]", re.I)

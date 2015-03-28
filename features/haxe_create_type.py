@@ -21,7 +21,7 @@ class HaxeCreateType( sublime_plugin.WindowCommand ):
         view = sublime.active_window().active_view()
         scopes = view.scope_name(view.sel()[0].end()).split()
         fn = view.file_name()
-            
+
         pack = [];
 
         if fn is None :
@@ -64,7 +64,7 @@ class HaxeCreateType( sublime_plugin.WindowCommand ):
 
     def on_done( self , inp ) :
 
-        fn = self.classpath;
+        fn = HaxeCreateType.classpath
         parts = inp.split(".")
         pack = []
         cl = "${2:ClassName}"
