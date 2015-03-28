@@ -11,6 +11,7 @@ from .haxe_generate_code import HaxeGenerateCode
 from .haxe_generate_code_helper import HaxeGenerateCodeEdit
 from .haxe_generate_field import HaxeGenerateField
 from .haxe_extract_var import HaxeExtractVar
+from .haxe_hint import HaxeHint, HaxeShowPopup, HaxeColorScheme
 from .haxe_implement_interface import HaxeImplementInterface
 from .haxe_organize_imports import HaxeOrganizeImports, HaxeOrganizeImportsEventListener, HaxeOrganizeImportsEdit
 
@@ -31,4 +32,7 @@ __all__ = [
     'HaxeExtractVar',
     'HaxeImplementInterface',
     'HaxeGenerateCode',
+    'HaxeColorScheme',
+    'HaxeShowPopup',
+    'HaxeHint',
 ]

@@ -31,7 +31,12 @@
 	*/
 	"haxe_whitespace_style" : "function f(a:T<T>, b:T = null):T->T;",
 	
-	"haxe_use_cache" : true
+	"haxe_use_cache" : true,
+	
+	/*
+		Use popups in Sublime Text 3 (build >= 3070)
+	*/
+	"haxe_use_popup" : true
 	
 	// ,"haxe_path" : "/usr/bin/haxe"
 	// ,"haxe_library_path" : "/usr/local/haxe/std:."

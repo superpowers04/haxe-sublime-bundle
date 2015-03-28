@@ -171,6 +171,28 @@
         "args" : {"add" : true, "sort" : true, "remove" : true, "auto_remove" : false}
     },
     {
+        "keys": ["ctrl+shift+h","ctrl+shift+p"],
+        "command": "haxe_hint",
+        "context": [
+            {
+                "key": "selector",
+                "operator": "equal",
+                "operand": "source.haxe.2 meta.parameters.haxe.2"
+            }
+        ]
+    },
+    {
+        "keys": ["ctrl+shift+h","ctrl+shift+p"],
+        "command": "haxe_show_type",
+        "context": [
+            {
+                "key": "selector",
+                "operator": "not_equal",
+                "operand": "source.haxe.2 meta.parameters.haxe.2"
+            }
+        ]
+    },
+    {
         "keys": ["ctrl+shift+f1"],
         "command" : "haxe_show_documentation",
         "args" : {}
