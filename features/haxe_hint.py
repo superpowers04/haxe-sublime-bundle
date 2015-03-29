@@ -157,7 +157,7 @@ class HaxeHint(sublime_plugin.TextCommand):
 
             if haxe_use_popup:
                 self.show_popup(hints)
-            elif haxe_smart_snippets:
+            elif haxe_smart_snippets and input:
                 self.show_snippet(hints)
 
     def show_popup(self, hints):
