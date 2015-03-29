@@ -109,6 +109,24 @@ class HaxeShowPopup(sublime_plugin.TextCommand):
 
 class HaxeHint(sublime_plugin.TextCommand):
 
+    def insert_snippet(self, hints):
+        view = self.view
+        snippet = ''
+        i = 1
+        for h in hints:
+            var = '%d:%s' % (i, h)
+            if snippet == '':
+                snippet = var
+            else:
+                snippet += ',${%s}' % var
+            i += 1
+
+        snippet = format_statement(view, snippet)
+
+        view.run_command('insert_snippet', {
+            'contents': '${' + snippet + '}'
+        })
+
     def run(self, edit, input=''):
         complete = HaxeComplete_inst()
         view = self.view
@@ -158,7 +176,7 @@ class HaxeHint(sublime_plugin.TextCommand):
             if haxe_use_popup:
                 self.show_popup(hints)
             elif haxe_smart_snippets and input:
-                self.show_snippet(hints)
+                self.insert_snippet(hints)
 
     def show_popup(self, hints):
         view = self.view
@@ -175,22 +193,4 @@ class HaxeHint(sublime_plugin.TextCommand):
 
         view.run_command('haxe_show_popup', {
             'text': text
-        })
-
-    def show_snippet(self, hints):
-        view = self.view
-        snippet = ''
-        i = 1
-        for h in hints:
-            var = '%d:%s' % (i, h)
-            if snippet == '':
-                snippet = var
-            else:
-                snippet += ',${%s}' % var
-            i += 1
-
-        snippet = format_statement(view, snippet)
-
-        view.run_command('insert_snippet', {
-            'contents': '${' + snippet + '}'
         })
