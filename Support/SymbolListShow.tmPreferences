@@ -12,9 +12,10 @@
 		<integer>1</integer>
 		<key>symbolTransformation</key>
 		<string>
-			s/^(abstract|class|enum|interface|typedef)\s+(\w+).*/▼ $2/;
-			s/^static.*(function)\s+(\w+).*/   ⚪ $2/;
-			s/^(function)\s+(\w+).*/   ⚫ $2/;
+			s/[\(\{].*//;
+			s/^(abstract|class|enum|interface|typedef)\s+/▼ $2 /;
+			s/^static\s*function\s+/   ⚪ /;
+			s/^(function)\s+/   ⚫ /;
 			s/^static.*(var)\s+(\w+).*/   ▫ $2/;
 			s/^(var)\s+(\w+).*/   ▪ $2/;
 		</string>
