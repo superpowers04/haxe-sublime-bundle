@@ -23,6 +23,13 @@ plugin_file = __file__
 plugin_filepath = os.path.realpath(plugin_file)
 plugin_path = os.path.dirname(plugin_filepath)
 
+# Reload modules
+reloader = 'features.haxe_reload_modules'
+if sys.version_info >= (3,):
+    reloader = 'Haxe.' + reloader
+if reloader in sys.modules:
+    sys.modules[reloader].reload_modules()
+
 try: # Python 3
 
     # Import the features module, including the haxelib and key commands etc
@@ -30,12 +37,12 @@ try: # Python 3
     from .features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from .HaxeHelper import runcmd, show_quick_panel, cache
-    from .HaxeHelper import spaceChars, wordChars, importLine, packageLine, compilerOutput
-    from .HaxeHelper import compactFunc, compactProp, libLine, classpathLine, typeDecl
-    from .HaxeHelper import libFlag, skippable, inAnonymous, extractTag
-    from .HaxeHelper import variables, functions, functionParams, paramDefault
-    from .HaxeHelper import isType, comments, haxeVersion, haxeFileRegex, controlStruct
+    from .features.haxe_helper import runcmd, show_quick_panel, cache
+    from .features.haxe_helper import spaceChars, wordChars, importLine, packageLine, compilerOutput
+    from .features.haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
+    from .features.haxe_helper import libFlag, skippable, inAnonymous, extractTag
+    from .features.haxe_helper import variables, functions, functionParams, paramDefault
+    from .features.haxe_helper import isType, comments, haxeVersion, haxeFileRegex, controlStruct
 
 except (ValueError): # Python 2
 
@@ -44,12 +51,12 @@ except (ValueError): # Python 2
     from features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from HaxeHelper import runcmd, show_quick_panel, cache
-    from HaxeHelper import spaceChars, wordChars, importLine, packageLine, compilerOutput
-    from HaxeHelper import compactFunc, compactProp, libLine, classpathLine, typeDecl
-    from HaxeHelper import libFlag, skippable, inAnonymous, extractTag
-    from HaxeHelper import variables, functions, functionParams, paramDefault
-    from HaxeHelper import isType, comments, haxeVersion, haxeFileRegex, controlStruct
+    from haxe_helper import runcmd, show_quick_panel, cache
+    from haxe_helper import spaceChars, wordChars, importLine, packageLine, compilerOutput
+    from haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
+    from haxe_helper import libFlag, skippable, inAnonymous, extractTag
+    from haxe_helper import variables, functions, functionParams, paramDefault
+    from haxe_helper import isType, comments, haxeVersion, haxeFileRegex, controlStruct
 
 # For running background tasks
 

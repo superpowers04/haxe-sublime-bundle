@@ -7,11 +7,11 @@ import sublime_plugin
 try:  # Python 3
     from .haxe_generate_code_helper import *
     from .haxe_organize_imports import HaxeOrganizeImports
-    from ..HaxeHelper import HaxeComplete_inst
+    from .haxe_helper import HaxeComplete_inst
 except (ValueError):  # Python 2
     from haxe_generate_code_helper import *
     from haxe_organize_imports import HaxeOrganizeImports
-    from HaxeHelper import HaxeComplete_inst
+    from haxe_helper import HaxeComplete_inst
 
 re_comments = re.compile(
     r'(//[^\n\r]*?[\n\r]|/\*(.*?)\*/)', re.MULTILINE | re.DOTALL)

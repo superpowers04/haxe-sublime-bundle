@@ -5,11 +5,11 @@ from copy import deepcopy
 from os.path import basename
 
 try:  # Python 3
-    from ..HaxeHelper import packageLine, show_quick_panel, \
+    from .haxe_helper import packageLine, show_quick_panel, \
         typeDecl, HaxeComplete_inst
     from .haxe_generate_code_helper import count_blank_lines
 except (ValueError):  # Python 2
-    from HaxeHelper import packageLine, show_quick_panel, \
+    from haxe_helper import packageLine, show_quick_panel, \
         typeDecl, HaxeComplete_inst
     from haxe_generate_code_helper import count_blank_lines
 

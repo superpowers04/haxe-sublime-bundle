@@ -3,9 +3,9 @@ import sublime
 import os
 
 try: # Python 3
-    from ..HaxeHelper import HaxeComplete_inst, isType
+    from .haxe_helper import HaxeComplete_inst, isType
 except (ValueError): # Python 2
-    from HaxeHelper import HaxeComplete_inst, isType
+    from haxe_helper import HaxeComplete_inst, isType
 
 
 class HaxeCreateType( sublime_plugin.WindowCommand ):

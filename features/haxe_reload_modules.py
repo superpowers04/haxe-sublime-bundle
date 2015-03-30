@@ -9,13 +9,13 @@ for mod in sys.modules:
     if 'haxe_' in mod and sys.modules[mod] != None:
         haxe_modules.append(mod)
 
-
 package = 'features'
 if int(sublime.version()) >= 3000:
     package = 'Haxe.' + package
 
 submods = [
     '',
+    '.haxe_helper',
     '.haxe_generate_code_helper',
     '.haxe_organize_imports',
     '.haxe_generate_field',
@@ -31,6 +31,7 @@ submods = [
     '.haxe_reload_modules',
 ]
 
+
 def reload_modules():
     print('Reload submods')
     for submod in submods:
@@ -38,7 +39,5 @@ def reload_modules():
         if mod in haxe_modules:
             try:
                 reload(sys.modules[mod])
-                print('reload ', mod)
             except:
-                print('pass ', mod)
                 pass

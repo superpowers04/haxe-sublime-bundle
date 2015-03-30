@@ -15,26 +15,27 @@ from .haxe_hint import HaxeHint, HaxeShowPopup, HaxeColorScheme
 from .haxe_implement_interface import HaxeImplementInterface
 from .haxe_organize_imports import HaxeOrganizeImports, HaxeOrganizeImportsEventListener, HaxeOrganizeImportsEdit
 from .haxe_reload_modules import reload_modules
+from .haxe_helper import *
 
 print("Haxe : Reloading haxe module")
 
-__all__ = [
-    'HaxeRestartServer',
-    'HaxeCreateType',
-    'HaxeGenerateImport',
-    'HaxeFindDefinition',
-    'HaxeAddHxml',
-    'HaxeShowType',
-    'HaxeOrganizeImportsEventListener',
-    'HaxeOrganizeImportsEdit',
-    'HaxeOrganizeImports',
-    'HaxeGenerateCodeEdit',
-    'HaxeGenerateField',
-    'HaxeExtractVar',
-    'HaxeImplementInterface',
-    'HaxeGenerateCode',
-    'HaxeColorScheme',
-    'HaxeShowPopup',
-    'HaxeHint',
-    'reload_modules',
-]
+# __all__ = [
+#     'HaxeRestartServer',
+#     'HaxeCreateType',
+#     'HaxeGenerateImport',
+#     'HaxeFindDefinition',
+#     'HaxeAddHxml',
+#     'HaxeShowType',
+#     'HaxeOrganizeImportsEventListener',
+#     'HaxeOrganizeImportsEdit',
+#     'HaxeOrganizeImports',
+#     'HaxeGenerateCodeEdit',
+#     'HaxeGenerateField',
+#     'HaxeExtractVar',
+#     'HaxeImplementInterface',
+#     'HaxeGenerateCode',
+#     'HaxeColorScheme',
+#     'HaxeShowPopup',
+#     'HaxeHint',
+#     'reload_modules',
+# ]
