@@ -51,12 +51,12 @@ except (ValueError): # Python 2
     from features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from haxe_helper import runcmd, show_quick_panel, cache
-    from haxe_helper import spaceChars, wordChars, importLine, packageLine, compilerOutput
-    from haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
-    from haxe_helper import libFlag, skippable, inAnonymous, extractTag
-    from haxe_helper import variables, functions, functionParams, paramDefault
-    from haxe_helper import isType, comments, haxeVersion, haxeFileRegex, controlStruct
+    from features.haxe_helper import runcmd, show_quick_panel, cache
+    from features.haxe_helper import spaceChars, wordChars, importLine, packageLine, compilerOutput
+    from features.haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
+    from features.haxe_helper import libFlag, skippable, inAnonymous, extractTag
+    from features.haxe_helper import variables, functions, functionParams, paramDefault
+    from features.haxe_helper import isType, comments, haxeVersion, haxeFileRegex, controlStruct
 
 # For running background tasks
 
