@@ -25,8 +25,9 @@ class HaxeColorScheme(sublime_plugin.EventListener):
             return
 
         self.inited = True
-        view.settings().add_on_change('color_scheme', self.on_scheme_change)
-        self.on_scheme_change()
+        view.settings().add_on_change(
+            'color_scheme', lambda: self.on_scheme_change(view))
+        self.on_scheme_change(view)
 
     @staticmethod
     def get_color(name):
@@ -56,10 +57,9 @@ class HaxeColorScheme(sublime_plugin.EventListener):
         if not self.inited:
             self.init(view)
 
-    def on_scheme_change(self):
+    def on_scheme_change(self, view):
         HaxeColorScheme.styles = None
         HaxeColorScheme.color_map = None
-        view = sublime.active_window().active_view()
 
         color_scheme = view.settings().get('color_scheme')
 
