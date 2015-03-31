@@ -641,6 +641,11 @@ class HaxeComplete( sublime_plugin.EventListener ):
                             outp = mFile.group(2)
                     elif (tag == "haxelib"):
                         currentBuild.libs.append( HaxeLib.get( name ) )
+                        if name == 'openfl':
+                            currentBuild.libs.append( HaxeLib.get( 'lime' ) )
+                            currentBuild.args.append( ("-lib" , 'lime') )
+                        elif name == 'lime':
+                            pass
                         currentBuild.args.append( ("-lib" , name) )
                     elif (tag == "haxedef"):
                         currentBuild.args.append( ("-D", name) )
