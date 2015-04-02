@@ -3,24 +3,24 @@ An Haxe Bundle for [Sublime Text 2](http://www.sublimetext.com/2) and [Sublime T
 
 ### Features
 
-- Syntax highlighting, auto-completion, [code hints](wiki/Features#code-hints)
-- Code [generation](wiki/Code generation) / [navigation](wiki/Code navigation)
-- Error highlighting / [navigation](wiki/Code navigation#error-navigation)
-- **[NME](http://www.nme.io/), [OpenFl](https://github.com/openfl/openfl)** and **[Flambe](http://getflambe.com)** [support](wiki/Usage#targeting-nmeopenflflambe)
-- Haxelib [integration](wiki/Features#haxelib-integration)
-- [More](wiki/Features)
+- Syntax highlighting, auto-completion, [code hints](../../wiki/Features#code-hints)
+- Code [generation](../../wiki/Code generation) / [navigation](../../wiki/Code navigation)
+- Error highlighting / [navigation](../../wiki/Code navigation#error-navigation)
+- **[NME](http://www.nme.io/), [OpenFl](https://github.com/openfl/openfl)** and **[Flambe](http://getflambe.com)** [support](../../wiki/Usage#targeting-nmeopenflflambe)
+- Haxelib [integration](../../wiki/Features#haxelib-integration)
+- [More](../../wiki/Features)
 
 ### Installation
 
-- via [Package Control](wiki/Installation#sublime-package-control)
-- [Manual installation](wiki/Installation#manual-installation)
+- via [Package Control](../../wiki/Installation#sublime-package-control)
+- [Manual installation](../../wiki/Installation#manual-installation)
 
 ### Usage
 
-- [Code style](wiki/Code style) 
-- [Shortcuts](wiki/Usage#shortcuts)
-- [Settings](wiki/Usage#settings)
-- [More](wiki/Usage) 
+- [Code style](../../wiki/Code style) 
+- [Shortcuts](../../wiki/Usage#shortcuts)
+- [Settings](../../wiki/Usage#settings)
+- [More](../../wiki/Usage) 
 
 ### Reviews
 
