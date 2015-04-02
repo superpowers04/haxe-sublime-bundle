@@ -17,24 +17,7 @@ FIELD_VAR = 'var'
 FIELD_STATIC_FUNC = 'static function'
 FIELD_STATIC_VAR = 'static var'
 
-re_format_op_par = re.compile('\s*\(\s*')
-re_format_cl_par = re.compile('\s*\)')
-re_format_empty_par = re.compile('\(\s+\)')
-re_format_colon = re.compile('([^\d\s])\s*:\s*')
-re_format_op_ang = re.compile('\s*<\s*')
-re_format_cl_ang = re.compile('([^-\s])\s*>')
-re_format_comma = re.compile('\s*,\s*')
-re_format_assign = re.compile('\s*=\s*')
-re_format_type_sep = re.compile('\s*->\s*')
-re_format_semicolon = re.compile('\s*;')
-
 re_word = re.compile('^[_a-z]\w*$')
-re_whitespace_style = re.compile(
-    'function f(\s*)\((\s*)'
-    'a(\s*):(\s*)T(\s*)<(\s*)T(\s*)>(\s*),(\s*)'
-    'b\s*:\s*T(\s*)=(\s*)null(\s*)'
-    '\)\s*:\s*T(\s*)->(\s*)T(\s*);')
-whitespace_style = None
 
 
 def count_blank_lines(view, pos):
@@ -129,23 +112,6 @@ def find_regions(view, selector, in_region=None, incl_string=False):
                 regions.append(rgn)
 
     return regions
-
-
-def format_statement(view, value):
-    ws = get_whitespace_style(view)
-
-    value = re_format_op_par.sub('%s(%s' % (ws['_('], ws['(_']), value)
-    value = re_format_cl_par.sub('%s)' % ws['_)'], value)
-    value = re_format_empty_par.sub('()', value)
-    value = re_format_colon.sub('\\1%s:%s' % (ws['_:'], ws[':_']), value)
-    value = re_format_op_ang.sub('%s<%s' % (ws['_<'], ws['<_']), value)
-    value = re_format_cl_ang.sub('\\1%s>' % ws['_>'], value)
-    value = re_format_comma.sub('%s,%s' % (ws['_,'], ws[',_']), value)
-    value = re_format_assign.sub('%s=%s' % (ws['_='], ws['=_']), value)
-    value = re_format_type_sep.sub('%s->%s' % (ws['_->'], ws['->_']), value)
-    value = re_format_semicolon.sub('%s;' % ws['_;'], value)
-
-    return value
 
 
 def get_context(view):
@@ -260,39 +226,6 @@ def get_indent(view, pos):
     return ''
 
 
-def get_whitespace_style(view):
-    global whitespace_style
-
-    def_style = 'function f(a:T<T>, b:T = null):T->T;'
-    s = view.settings().get('haxe_whitespace_style', def_style)
-
-    if whitespace_style is None or whitespace_style['style'] != s:
-        whitespace_style = {}
-        whitespace_style['style'] = s
-
-        mo = re_whitespace_style.search(s)
-        if mo is None:
-            mo = re_whitespace_style.search(def_style)
-
-        whitespace_style['_('] = mo.group(1)
-        whitespace_style['(_'] = mo.group(2)
-        whitespace_style['_:'] = mo.group(3)
-        whitespace_style[':_'] = mo.group(4)
-        whitespace_style['_<'] = mo.group(5)
-        whitespace_style['<_'] = mo.group(6)
-        whitespace_style['_>'] = mo.group(7)
-        whitespace_style['_,'] = mo.group(8)
-        whitespace_style[',_'] = mo.group(9)
-        whitespace_style['_='] = mo.group(10)
-        whitespace_style['=_'] = mo.group(11)
-        whitespace_style['_)'] = mo.group(12)
-        whitespace_style['_->'] = mo.group(13)
-        whitespace_style['->_'] = mo.group(14)
-        whitespace_style['_;'] = mo.group(15)
-
-    return whitespace_style
-
-
 def is_haxe_scope(view):
     return view.score_selector(0, "source.haxe.2") > 0
 
@@ -302,23 +235,3 @@ def set_pos(view, pos):
     view.sel().add(sublime.Region(pos, pos))
     view.show_at_center(pos)
 
-
-class HaxeGenerateCodeEdit(sublime_plugin.TextCommand):
-
-    def run(self, edit, text=None, pos=0):
-        if text is None:
-            return
-
-        set_pos(self.view, pos)
-        new_lines = ''
-        for c in text:
-            if c == '\n':
-                new_lines += c
-            else:
-                break
-
-        if new_lines:
-            self.view.run_command('insert', {"characters": new_lines})
-            text = text[len(new_lines):]
-
-        self.view.run_command('insert_snippet', {"contents": text})

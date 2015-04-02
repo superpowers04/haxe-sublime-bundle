@@ -194,7 +194,7 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
                     else:
                         ret = 'return null;'
                 ftext = ftext.replace(
-                    ';', '$TM_CSLB{\n\t%s\n}' % ret)
+                    ';', '$HX_W_OCB{\n\t%s\n}' % ret)
 
             self.window.run_command(
                 'haxe_generate_field',

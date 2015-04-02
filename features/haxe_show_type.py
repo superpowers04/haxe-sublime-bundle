@@ -4,10 +4,10 @@ import sublime_plugin
 
 try:  # Python 3
     from .haxe_helper import HaxeComplete_inst
-    from .haxe_generate_code_helper import format_statement
+    from .haxe_format import format_statement
 except (ValueError):  # Python 2
     from haxe_helper import HaxeComplete_inst
-    from haxe_generate_code_helper import format_statement
+    from haxe_format import format_statement
 
 
 class HaxeShowType(sublime_plugin.TextCommand):

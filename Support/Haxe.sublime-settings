@@ -23,13 +23,29 @@
 	"haxe_modifiers_order" : "opis",
 	
 	/*
-		Whitespace style used in generated code
+		Whitespace style used in generated code and snippets
 		Examples:
 		"function f ( a : T < T > , b : T = null ) : T -> T;"
 		"function f ( a:T<T> , b:T=null ):T->T;"
 		"function f(a:T<T>, b:T = null):T->T;"
 	*/
 	"haxe_whitespace_style" : "function f(a:T<T>, b:T = null):T->T;",
+	
+	/*
+		Whitespace style used in generated code and snippets
+		Examples:
+		"for(i in 0...5)"
+		"for (i in 0 ... 5)"
+	*/
+	"haxe_whitespace_style2" : "for (i in 0 ... 5)",
+	
+	/*
+		Brace style used in generated code and snippets
+		Examples:
+		"}\nelse\n{"
+		"} else {"
+	*/
+	"haxe_brace_style" : "} else {",
 	
 	"haxe_use_cache" : true,
 	

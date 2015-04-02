@@ -227,7 +227,6 @@ class HaxeOrganizeImportsEdit(sublime_plugin.TextCommand):
         ins = ''
 
         before, after = count_blank_lines(view, pos)
-        print(before, after)
 
         next_line_pos = view.full_line(pos).end()
         for i in range(0, after - 1):

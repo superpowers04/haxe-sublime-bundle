@@ -8,13 +8,14 @@ from .haxe_find_definition import HaxeFindDefinition
 from .haxe_show_type import HaxeShowType
 from .haxe_add_hxml import HaxeAddHxml
 from .haxe_generate_code import HaxeGenerateCode
-from .haxe_generate_code_helper import HaxeGenerateCodeEdit
-from .haxe_generate_field import HaxeGenerateField
+from .haxe_generate_code_helper import *
+from .haxe_generate_field import HaxeGenerateField, HaxeGenerateFieldEdit
 from .haxe_extract_var import HaxeExtractVar
 from .haxe_hint import HaxeHint, HaxeShowPopup, HaxeColorScheme
 from .haxe_implement_interface import HaxeImplementInterface
 from .haxe_organize_imports import HaxeOrganizeImports, HaxeOrganizeImportsEventListener, HaxeOrganizeImportsEdit
 from .haxe_reload_modules import reload_modules
+from .haxe_format import HaxeFormat
 from .haxe_helper import *
 
 print("Haxe : Reloading haxe module")
