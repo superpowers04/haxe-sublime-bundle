@@ -85,8 +85,11 @@ class HaxeColorScheme(sublime_plugin.EventListener):
             s = d['settings']
             if 'scope' not in d:
                 safe_update(s, dct)
-            elif 'text' in d['scope'] or 'source' in d['scope']:
-                dct.update(d.settings)
+            else:
+                scope = d['scope']
+                scopes = [sc.strip() for sc in scope.split(',')]
+                if 'text' in scopes or 'source' in scopes:
+                    dct.update(d.settings)
 
         HaxeColorScheme.color_map = dct
 
