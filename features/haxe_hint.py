@@ -174,7 +174,7 @@ class HaxeHint(sublime_plugin.TextCommand):
             return
 
         for r in view.sel():
-            comps, hints = complete.get_haxe_completions(self.view, r.end())
+            comps, hints = complete.get_haxe_completions(view, r.end())
 
             if haxe_use_popup:
                 self.show_popup(hints)

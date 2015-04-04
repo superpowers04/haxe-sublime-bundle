@@ -1,9 +1,11 @@
 import sublime_plugin
 
 try:  # Python 3
+    from .haxe_helper import HaxeComplete_inst
     from .haxe_generate_code_helper import *
     from .haxe_format import format_statement
 except (ValueError):  # Python 2
+    from haxe_helper import HaxeComplete_inst
     from haxe_generate_code_helper import *
     from haxe_format import format_statement
 
@@ -176,6 +178,15 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
         return order
 
+    def get_param_type(self):
+        view = self.window.active_view()
+        complete = HaxeComplete_inst()
+
+        for r in view.sel():
+            comps, hints = complete.get_haxe_completions(view, r.end())
+
+        return hints
+
     def get_text(self):
         view = self.window.active_view()
         name = self.name
@@ -183,18 +194,44 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
             name, False, True,
             self.context['type']['group'] == 'abstract', self.static)
 
+        types = None
+        if 'meta.parameters.haxe.2' in self.context['scope'] and \
+                self.caret_name:
+            param_type = self.get_param_type()
+            tp = param_type[0].split(':')[1]
+            types = [r.strip() for r in tp.split('->')]
+
         if 'var' in self.field:
             text = '%svar %s:%s$0;'
             text = format_statement(view, text)
-            text = text % (mod, name, '${%d:Dynamic}' % idx)
+            ret = 'Dynamic'
+            if types:
+                ret = '$HX_W_AR->${HX_AR_W}'.join(types)
+            text = text % (mod, name, '${%d:%s}' % (idx, ret))
         else:
             text = '%sfunction %s(%s):%s$HX_W_OCB{\n\t$0\n}'
             text = format_statement(view, text)
+            params = ''
+            ret = 'Void'
+            ret_idx = idx + 1
+            param_idx = 1
+
+            if types:
+                ret = types.pop()
+                for tp in types:
+                    if params:
+                        params += '$HX_W_CM,${HX_CM_W}'
+                    params += '${%d:p%d}$HX_W_C:${HX_C_W}%s' % (
+                        ret_idx, param_idx, tp)
+                    ret_idx += 1
+                    param_idx += 1
+
             text = text % (
                 mod,
                 name,
-                '$%d' % (idx),
-                '${%d:Void}' % (idx + 1))
+                '${%d:%s}' % (idx, params),
+                '${%d:%s}' % (ret_idx, ret))
+
         return text
 
     def on_input(self, name):
@@ -246,6 +283,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
             context = get_context(view)
         self.context = context
         self.name = name
+        self.caret_name = name
         self.field = field
         self.static = 'static' in field
         self.text = text
