@@ -23,6 +23,13 @@
 	"haxe_modifiers_order" : "opis",
 	
 	/*
+		Group property, getter and setter.
+		If true, the getter and setter 
+		will be placed next to the property declaration.
+	*/
+	"haxe_group_property_and_accessors" : true,
+	
+	/*
 		Whitespace style used in generated code and snippets
 		Examples:
 		"function f ( a : T < T > , b : T = null ) : T -> T;"
@@ -46,6 +53,15 @@
 		"} else {"
 	*/
 	"haxe_brace_style" : "} else {",
+	
+	/*
+		Blank lines
+	*/
+	"haxe_bl_top": 0,
+	"haxe_bl_property": 0,
+	"haxe_bl_group": 1,
+	"haxe_bl_var": 0,
+	"haxe_bl_method": 1,
 	
 	"haxe_use_cache" : true,
 	

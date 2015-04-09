@@ -54,7 +54,7 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
 
         for mo in re_field.finditer(src):
             name = mo.group(2)
-            if name in self.fieldnames:
+            if name in self.context.type.field_map:
                 continue
             lst.append((mo.group(1), name, 'public ' + mo.group(0)))
 
@@ -135,7 +135,7 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
     def find_interfaces(self):
         ctx = self.context
         view = self.window.active_view()
-        src = view.substr(ctx['type']['region'])
+        src = view.substr(ctx.type.region)
         self.interfaces = []
         ifaces = []
         imp_map = self.get_import_map()
@@ -185,14 +185,9 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
                 ret = ''
                 mo = re_return.search(ftext)
                 if mo:
-                    if mo.group(1) in ('Float', 'Int'):
-                        ret = 'return 0;'
-                    elif mo.group(1) == 'Void':
-                        ret = ''
-                    elif mo.group(1) == 'Bool':
-                        ret = 'return false;'
-                    else:
-                        ret = 'return null;'
+                    ret_val = get_default_value(mo.group(1))
+                    if ret_val:
+                        ret = 'return %s;' % ret_val
                 ftext = ftext.replace(
                     ';', '$HX_W_OCB{\n\t%s\n}' % ret)
 
@@ -202,12 +197,11 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
 
     @staticmethod
     def poll(ctx):
-        if 'type' not in ctx or \
-                ctx['type']['group'] != 'class':
+        if not ctx.type or ctx.type.group != 'class':
             return []
 
-        view = ctx['view']
-        src = view.substr(ctx['type']['region'])
+        view = ctx.view
+        src = view.substr(ctx.type.region)
         if re_implements.search(src) is None:
             return []
 
@@ -220,23 +214,19 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
 
         return cmds
 
-    def run(self, context=None):
+    def run(self):
         win = self.window
         view = win.active_view()
 
         if view is None or view.is_loading() or not is_haxe_scope(view):
             return
 
-        if context is None:
-            context = get_context(view)
-        self.context = context
-        self.fieldnames = get_fieldnames(self.context)
+        self.context = get_context(view)
 
-        if 'type' not in context:
+        if not self.context.type:
             return
 
-        self.type_map = \
-            HaxeOrganizeImports.get_type_map(self.window.active_view())
+        self.type_map = HaxeOrganizeImports.get_type_map(view)
         if self.type_map is None:
             return
 

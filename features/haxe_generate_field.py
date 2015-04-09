@@ -12,12 +12,15 @@ except (ValueError):  # Python 2
 
 class HaxeGenerateFieldEdit(sublime_plugin.TextCommand):
 
-    def run(self, edit, text=None, pos=0):
+    def run(self, edit, text=None, pos=0, move=True):
         if text is None:
             return
 
         view = self.view
-        set_pos(view, pos)
+
+        old_pos = view.sel()[0].end()
+        old_size = view.size()
+        set_pos(view, pos, move)
 
         new_lines = ''
         for c in text:
@@ -39,15 +42,19 @@ class HaxeGenerateFieldEdit(sublime_plugin.TextCommand):
 
         self.view.run_command('insert_snippet', {"contents": text})
 
+        if not move:
+            if old_pos >= pos:
+                old_pos = old_pos + view.size() - old_size
+            set_pos(view, old_pos, False)
+
 
 class HaxeGenerateField(sublime_plugin.WindowCommand):
 
     def complete(self):
         view = self.window.active_view()
 
-        if self.name in get_fieldnames(self.context):
-            view.set_status(
-                'haxe-status',
+        if self.name in self.context.type.field_map:
+            sublime.status_message(
                 'Field with name `%s` is already exist' % self.name)
             return
 
@@ -60,71 +67,99 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
         self.window.run_command(
             'haxe_generate_field_edit',
-            {'text': self.text, 'pos': pos})
+            {'text': self.text, 'pos': pos, 'move': self.move_caret})
 
         self.context = None
 
     def find_insert_pos(self, view, field_type, field_name):
-        pos_order = self.get_fields_order()
         ctx = self.context
 
-        after_class = '\n' + ''.join(['\n' for i in range(0, 0)])
-        between_vars = '\n' + ''.join(['\n' for i in range(0, 0)])
-        between_functions = '\n' + ''.join(['\n' for i in range(0, 1)])
-        post_between_groups = ''.join(['\n' for i in range(0, 1)])
-        pre_between_groups = '\n' + post_between_groups
+        bl_top = get_blank_lines(view, 'haxe_bl_top')
+        bl_var = get_blank_lines(view, 'haxe_bl_var')
+        bl_method = get_blank_lines(view, 'haxe_bl_method', 1)
+        bl_group = get_blank_lines(view, 'haxe_bl_group', 1)
 
+        field_is_var = 'var' in field_type
+        group_prop = view.settings().get(
+            'haxe_group_property_and_accessors', True)
         has_fields = False
         scan = False
 
-        for ft in reversed(pos_order):
-            if not scan and ft != field_type:
-                has_fields = has_fields or ctx['type'][ft]
+        group_order, group_svars, group_smethods = self.get_group_order()
+        group_map = self.get_group_map(group_svars, group_smethods)
+
+        for ft in reversed(group_order):
+            group_is_var = 'var' in ft
+            same_group = ft == field_type
+            if not group_svars and field_is_var:
+                same_group = field_is_var == group_is_var
+            if not group_smethods and not field_is_var:
+                same_group = field_is_var == group_is_var
+            if not scan and not same_group:
+                has_fields = has_fields or group_map[ft]
                 continue
 
             scan = True
-            pre = between_vars
+            pre = '\n' + bl_var
+            post = bl_var
             if 'function' in ft:
-                pre = between_functions
-            post = '\n'
+                pre = '\n' + bl_method
+                post = bl_method
 
-            last_tup = None
-            for tup in reversed(ctx['type'][ft]):
+            last_field = None
+            for field in reversed(group_map[ft]):
                 has_fields = True
-                if field_name >= tup[1] or ft != field_type:
-                    if ft != field_type:
-                        pre = pre_between_groups
-                        post = post_between_groups
-                    elif not last_tup:
-                        post = post_between_groups
-                    return (tup[2].end(), pre, post)
-                last_tup = tup
+                if group_prop and not field_is_var:
+                    if self.is_getter_setter(field):
+                        continue
+                if field_name >= field.name or not same_group:
+                    if not same_group:
+                        pre = '\n' + bl_group
+                        post = bl_group
+                    elif not last_field:
+                        post = bl_group
+                    pos = field.region.end()
+                    if group_prop and self.is_property(view, field) and \
+                            (field_is_var or not same_group):
+                        get_name = 'get_' + field.name
+                        set_name = 'set_' + field.name
+                        if get_name in ctx.type.field_map:
+                            pre = '\n' + bl_group
+                            pos = max(
+                                pos, ctx.type.field_map[get_name].region.end())
+                        if set_name in ctx.type.field_map:
+                            pre = '\n' + bl_group
+                            pos = max(
+                                pos, ctx.type.field_map[set_name].region.end())
+                    return (pos, pre, post)
+                last_field = field
 
-            if ft == field_type and last_tup is not None:
-                post = between_vars
+            if same_group and last_field is not None:
+                post = '\n' + bl_var
                 if 'function' in ft:
-                    post = between_functions
+                    post = '\n' + bl_method
                 pre = ''
                 return (
-                    find_line_start_pos(view, last_tup[2].begin()),
+                    find_line_start_pos(view, last_field.region.begin()),
                     pre, post)
 
-        pre = after_class
+        pre = '\n' + bl_top
         if has_fields:
-            post = post_between_groups
+            post = bl_group
         else:
             post = ''
 
-        return (ctx['type']['block'].begin(), pre, post)
+        return (ctx.type.block.begin(), pre, post)
 
-    def get_fields_order(self):
+    def get_group_order(self):
         view = self.window.active_view()
         def_order = 'VFvf'
         order = view.settings().get('haxe_fields_order', def_order)
 
-        for c in def_order:
-            if c not in order:
-                order += c
+        if 'v' not in order and 'V' not in order:
+            order += 'v'
+        if 'f' not in order and 'F' not in order:
+            order += 'f'
 
         dct = {
             'V': FIELD_STATIC_VAR,
@@ -134,49 +169,79 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         }
 
         lst = []
+        final_order = ''
         for c in order:
             if c not in dct:
                 continue
             lst.append(dct[c])
+            final_order += c
             del dct[c]
 
-        return lst
+        group_svars = 'v' in final_order and 'V' in final_order
+        group_smethods = 'f' in final_order and 'F' in final_order
 
-    def get_mod(self, name, o=False, p=True, i=False, s=True):
-        mod = ''
-        mod_map = {}
+        return lst, group_svars, group_smethods
 
-        order = self.get_mod_order()
+    def get_group_map(self, group_svars, group_smethods):
+        type = self.context.type
+        group_map = {}
 
-        def add_mod(use, key, value):
-            if use:
-                mod_map[key] = value
+        def mix(fields1, fields2):
+            lst = []
 
-        add_mod(o, 'o', 'override')
-        add_mod(p, 'p', 'private' if name[0] == '_' else 'public')
-        add_mod(i, 'i', 'inline')
-        add_mod(s, 's', 'static')
+            i1, i2 = 0, 0
+            n1, n2 = len(fields1), len(fields2)
+
+            while(i1 < n1 or i2 < n2):
+                f1 = None if i1 >= n1 else fields1[i1]
+                f2 = None if i2 >= n2 else fields2[i2]
+
+                if f1 and f2:
+                    if f1.region.end() < f2.region.end():
+                        lst.append(f1)
+                        i1 += 1
+                    else:
+                        lst.append(f2)
+                        i2 += 1
+                elif f1:
+                    lst.append(f1)
+                    i1 += 1
+                elif f2:
+                    lst.append(f2)
+                    i2 += 2
+
+            return lst
+
+        if not group_svars:
+            group_map[FIELD_VAR] = group_map[FIELD_STATIC_VAR] = mix(
+                type.vars, type.svars)
+        else:
+            group_map[FIELD_VAR] = type.vars
+            group_map[FIELD_STATIC_VAR] = type.svars
+
+        if not group_smethods:
+            group_map[FIELD_FUNC] = group_map[FIELD_STATIC_FUNC] = mix(
+                type.methods, type.smethods)
+        else:
+            group_map[FIELD_FUNC] = type.methods
+            group_map[FIELD_STATIC_FUNC] = type.smethods
+
+        return group_map
+
+
+    def get_mods(self, name, o=False, p=True, i=False, s=True):
+        mods = get_mods(
+            self.window.active_view(),
+            name[0] == '_', o, p, i, s)
+        mod_lst = mods.split(' ')
+        mods = ''
 
         idx = 1
-        for c in order:
-            if c not in mod_map:
-                continue
-            mod += '${%d:%s }' % (idx, mod_map[c])
-            del mod_map[c]
+        for mod in mod_lst:
+            mods += '${%d:%s }' % (idx, mod)
             idx += 1
 
-        return mod, idx
-
-    def get_mod_order(self):
-        view = self.window.active_view()
-        def_order = 'opis'
-        order = view.settings().get('haxe_modifiers_order', def_order)
-
-        for c in def_order:
-            if c not in order:
-                order += c
-
-        return order
+        return mods, idx
 
     def get_param_type(self):
         view = self.window.active_view()
@@ -190,12 +255,12 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
     def get_text(self):
         view = self.window.active_view()
         name = self.name
-        mod, idx = self.get_mod(
+        mod, idx = self.get_mods(
             name, False, True,
-            self.context['type']['group'] == 'abstract', self.static)
+            self.context.type.group == 'abstract', self.static)
 
         types = None
-        if 'meta.parameters.haxe.2' in self.context['scope'] and \
+        if SCOPE_PARAMETERS in self.context.scope and \
                 self.caret_name:
             param_type = self.get_param_type()
             tp = param_type[0].split(':')[1]
@@ -207,13 +272,16 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
             ret = 'Dynamic'
             if types:
                 ret = '$HX_W_AR->${HX_AR_W}'.join(types)
-            text = text % (mod, name, '${%d:%s}' % (idx, ret))
+            text = text % (
+                mod,
+                '${%d:%s}' % (idx, name),
+                '${%d:%s}' % (idx + 1, ret))
         else:
             text = '%sfunction %s(%s):%s$HX_W_OCB{\n\t$0\n}'
             text = format_statement(view, text)
             params = ''
             ret = 'Void'
-            ret_idx = idx + 1
+            ret_idx = idx + 2
             param_idx = 1
 
             if types:
@@ -228,17 +296,29 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
             text = text % (
                 mod,
-                name,
-                '${%d:%s}' % (idx, params),
+                '${%d:%s}' % (idx, name),
+                '${%d:%s}' % (idx + 1, params),
                 '${%d:%s}' % (ret_idx, ret))
 
         return text
 
+    def is_getter_setter(self, func):
+        fname = func[1]
+        fname4 = fname[:4]
+        if fname4 == 'get_' or fname4 == 'set_':
+            prop_name = fname[4:]
+            return prop_name in self.context.type.field_map
+
+        return False
+
+    def is_property(self, view, var):
+        mo = re_prop_params.search(view.substr(var[2]))
+        return mo is not None
+
     def on_input(self, name):
         name = name.strip()
         if not re_word.search(name):
-            view = self.window.active_view()
-            view.set_status('haxe-status', 'Invalid field name')
+            sublime.status_message('Invalid field name')
             return
 
         self.name = name
@@ -246,8 +326,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
     @staticmethod
     def poll(ctx):
-        if 'type' not in ctx or \
-                ctx['type']['group'] not in ('abstract', 'class'):
+        if not ctx.type or ctx.type.group not in ('abstract', 'class'):
             return []
 
         cmds = []
@@ -259,11 +338,11 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
                 'haxe_generate_field',
                 {'name': name, 'field': field}))
 
-        if 'word' in ctx:
-            add(ctx['word'], FIELD_VAR)
-            add(ctx['word'], FIELD_STATIC_VAR)
-            add(ctx['word'], FIELD_FUNC)
-            add(ctx['word'], FIELD_STATIC_FUNC)
+        if ctx.word and ctx.word.name not in ctx.type.field_map:
+            add(ctx.word.name, FIELD_VAR)
+            add(ctx.word.name, FIELD_STATIC_VAR)
+            add(ctx.word.name, FIELD_FUNC)
+            add(ctx.word.name, FIELD_STATIC_FUNC)
 
         add(None, FIELD_VAR)
         add(None, FIELD_STATIC_VAR)
@@ -272,23 +351,22 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
         return cmds
 
-    def run(self, context=None, name=None, field=FIELD_VAR, text=None):
+    def run(self, name=None, field=FIELD_VAR, text=None):
         win = self.window
         view = win.active_view()
 
         if view is None or view.is_loading() or not is_haxe_scope(view):
             return
 
-        if context is None:
-            context = get_context(view)
-        self.context = context
+        self.context = get_context(view)
         self.name = name
         self.caret_name = name
         self.field = field
         self.static = 'static' in field
         self.text = text
+        self.move_caret = text is None
 
-        if 'type' not in context:
+        if not self.context.type:
             return
 
         if name is None:

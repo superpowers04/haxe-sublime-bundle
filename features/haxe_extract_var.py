@@ -16,7 +16,7 @@ class HaxeExtractVar(sublime_plugin.TextCommand):
         sel_r = self.view.sel()[0]
 
         for i in range(
-                sel_r.begin() - 1, ctx['function']['block'].begin() - 1, -1):
+                sel_r.begin() - 1, ctx.method.block.begin() - 1, -1):
             c = src[i]
 
             if c == '\n':
@@ -28,7 +28,7 @@ class HaxeExtractVar(sublime_plugin.TextCommand):
                 new_line_pos = -1
 
         if new_line_pos == -1:
-            new_line_pos = ctx['function']['block'].begin() - 1
+            new_line_pos = ctx.method.block.begin() - 1
 
         pos = 0
         indent = ''
@@ -67,21 +67,17 @@ class HaxeExtractVar(sublime_plugin.TextCommand):
 
     @staticmethod
     def poll(ctx):
-        view = ctx['view']
+        view = ctx.view
+        cmds = []
 
-        if 'function' not in ctx or \
-                len(view.sel()) > 1 or \
-                view.sel()[0].empty():
-            return []
+        if not ctx.method or len(view.sel()) > 1 or view.sel()[0].empty():
+            return cmds
 
-        func_block_rgn = ctx['function']['block']
         sel = view.sel()[0]
 
-        if not func_block_rgn.contains(sel.begin()) or \
-                not func_block_rgn.contains(sel.end()):
-            return []
-
-        cmds = []
+        if not ctx.method.block.contains(sel.begin()) or \
+                not ctx.method.block.contains(sel.end()):
+            return cmds
 
         cmds.append((
             'Extract Local Variable',
@@ -90,17 +86,15 @@ class HaxeExtractVar(sublime_plugin.TextCommand):
 
         return cmds
 
-    def run(self, edit, context=None):
+    def run(self, edit):
         view = self.view
 
         if view is None or view.is_loading() or not is_haxe_scope(view):
             return
 
-        if context is None:
-            context = get_context(view)
-        self.context = context
+        self.context = get_context(view)
 
-        if 'function' not in context:
+        if not self.context.method:
             return
 
         src = view.substr(sublime.Region(0, view.size()))

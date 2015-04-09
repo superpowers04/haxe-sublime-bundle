@@ -23,9 +23,9 @@ header = '''
 shell_var_template = '''
             <dict>
                 <key>name</key>
-                <string>{}</string>
+                <string>{0}</string>
                 <key>value</key>
-                <string><![CDATA[{}]]></string>
+                <string><![CDATA[{1}]]></string>
             </dict>'''
 
 footer = '''
