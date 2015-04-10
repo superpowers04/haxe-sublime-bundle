@@ -4,8 +4,10 @@ import sublime_plugin
 
 try:  # Python 3
     from .haxe_helper import cache
+    from .haxe_generate_code_helper import is_haxe_scope
 except (ValueError):  # Python 2
     from haxe_helper import cache
+    from haxe_generate_code_helper import is_haxe_scope
 
 header = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -89,28 +91,33 @@ def format_statement(view, value):
 class HaxeFormat(sublime_plugin.EventListener):
 
     def __init__(self):
-        self.inited = False
         self.changed = False
+        self.ws = None
+        self.ws2 = None
+        self.bs = None
+        self.init()
 
-    def init(self, view):
-        if view.score_selector(0, 'source.haxe.2') == 0:
+    def init(self):
+        if sublime.active_window() is None or \
+                sublime.active_window().active_view() is None:
+            sublime.set_timeout(self.init, 200)
             return
 
-        self.inited = True
+        settings = sublime.load_settings('Haxe.sublime-settings')
 
-        view.settings().add_on_change(
+        settings.add_on_change(
             'haxe_whitespace_style',
-            lambda: self.update_whitespace_style(view))
-        view.settings().add_on_change(
+            lambda: self.update_whitespace_style(settings))
+        settings.add_on_change(
             'haxe_whitespace_style2',
-            lambda: self.update_whitespace_style2(view))
-        view.settings().add_on_change(
+            lambda: self.update_whitespace_style2(settings))
+        settings.add_on_change(
             'haxe_brace_style',
-            lambda: self.update_brace_style(view))
+            lambda: self.update_brace_style(settings))
 
-        self.update_whitespace_style(view)
-        self.update_whitespace_style2(view)
-        self.update_brace_style(view)
+        self.update_whitespace_style(settings)
+        self.update_whitespace_style2(settings)
+        self.update_brace_style(settings)
 
     def mark(self):
         if self.changed:
@@ -118,15 +125,7 @@ class HaxeFormat(sublime_plugin.EventListener):
 
         self.changed = True
 
-        sublime.set_timeout(lambda: self.save_shell_variables(), 100)
-
-    def on_activated(self, view):
-        if not self.inited:
-            self.init(view)
-
-    def on_load(self, view):
-        if not self.inited:
-            self.init(view)
+        sublime.set_timeout(self.save_shell_variables, 100)
 
     def save_shell_variables(self):
         global style_map
@@ -134,7 +133,7 @@ class HaxeFormat(sublime_plugin.EventListener):
         self.changed = False
         s = header
 
-        for key in style_map.keys():
+        for key in sorted(style_map.keys()):
             s += shell_var_template.format(key, style_map[key])
 
         s += footer
@@ -143,14 +142,16 @@ class HaxeFormat(sublime_plugin.EventListener):
         if s != svars:
             cache('Haxe.ShellVars.tmPreferences', s)
 
-    def update_brace_style(self, view):
+    def update_brace_style(self, settings):
         global style_map
 
         def_style = '} else {'
-        style = view.settings().get('haxe_brace_style')
+        style = settings.get('haxe_brace_style', def_style)
+        if style is None:
+            return
 
-        if 'brace_style' not in style_map or style_map['brace_style'] != style:
-            style_map['brace_style'] = style
+        if self.bs is None or self.bs != style:
+            self.bs = style
 
             mo = re_brace_style.search(style)
             if mo is None:
@@ -161,17 +162,20 @@ class HaxeFormat(sublime_plugin.EventListener):
 
             self.mark()
 
-    def update_whitespace_style(self, view):
-        global style_map
+    def update_whitespace_style(self, settings):
+        global style_map, settings_map
 
         def_style = 'function f(a:T<T>, b:T = null):T->T;'
-        style = view.settings().get('haxe_whitespace_style', def_style)
+        style = settings.get('haxe_whitespace_style', def_style)
+        if style is None:
+            return
 
         if style_map is None:
             style_map = {}
+            settings_map = {}
 
-        if 'style' not in style_map or style_map['style'] != style:
-            style_map['style'] = style
+        if self.ws is None or self.ws != style:
+            self.ws = style
 
             mo = re_whitespace_style.search(style)
             if mo is None:
@@ -196,14 +200,16 @@ class HaxeFormat(sublime_plugin.EventListener):
 
             self.mark()
 
-    def update_whitespace_style2(self, view):
-        global style_map
+    def update_whitespace_style2(self, settings):
+        global style_map, settings_map
 
         def_style = 'for (i in 0 ... 5)'
-        style = view.settings().get('haxe_whitespace_style2')
+        style = settings.get('haxe_whitespace_style2', def_style)
+        if style is None:
+            return
 
-        if 'style2' not in style_map or style_map['style2'] != style:
-            style_map['style2'] = style
+        if self.ws2 is None or self.ws2 != style:
+            self.ws2 = style
 
             mo = re_whitespace_style2.search(style)
             if mo is None:

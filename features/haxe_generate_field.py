@@ -228,7 +228,6 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
         return group_map
 
-
     def get_mods(self, name, o=False, p=True, i=False, s=True):
         mods = get_mods(
             self.window.active_view(),
