@@ -1894,7 +1894,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def get_haxe_completions( self , view , offset ):
-
+        print("OFFSET");
+        print(offset);
         src = view.substr(sublime.Region(0, view.size()))
         fn = view.file_name()
         src_dir = os.path.dirname(fn)
@@ -1958,34 +1959,33 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 if closedBrackets < 0 or closedSquares < 0 :
                     show_hints = False
             else :
-
                 completeOffset = max( prevDot + 1, prevPar + 1 , prevColon + 1 )
                 skipped = src[completeOffset:offset]
                 toplevelComplete = skippable.search( skipped ) is None and inAnonymous.search( skipped ) is None
 
         completeChar = src[completeOffset-1]
+        userChar = src[userOffset-1]
+
         inControlStruct = controlStruct.search( src[0:completeOffset] ) is not None
 
-        toplevelComplete = toplevelComplete or completeChar in ":(," or inControlStruct
+        toplevelComplete = toplevelComplete or ( completeChar in ":(," and userChar not in ":(," ) or inControlStruct
 
-        # if toplevelComplete :
-            #print("toplevel")
-        #     offset = userOffset
-        # else :
-        offset = completeOffset
-            #print(comps)
+        mode = None
 
-        if src[offset-1]=="." and src[offset-2] in ".1234567890" :
+        if( toplevelComplete ) :
+            mode = "toplevel"
+            offset = userOffset
+        else :
+            offset = completeOffset
+
+        if not toplevelComplete and src[offset-1]=="." and src[offset-2] in ".1234567890" :
             #comps.append(("... [iterator]",".."))
             comps.append((".","."))
 
         #if toplevelComplete and (inControlStruct or completeChar not in "(,") :
         #    return comps,hints
-        mode = None
-        if( toplevelComplete ) :
-            mode = "toplevel"
 
-        inp = (fn,offset,commas,src[0:offset-1])
+        inp = (fn,offset,commas,src[0:offset-1],mode)
         if self.currentCompletion["inp"] is None or inp != self.currentCompletion["inp"] :
 
             byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
