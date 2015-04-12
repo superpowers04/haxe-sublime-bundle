@@ -641,9 +641,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
                             outp = mFile.group(2)
                     elif (tag == "haxelib"):
                         # temporary fix #175
-                        if name == 'openfl':
-                            currentBuild.libs.append( HaxeLib.get( 'lime' ) )
-                            currentBuild.args.append( ('-lib' , 'lime') )
+                        # if name == 'openfl':
+                        #     currentBuild.libs.append( HaxeLib.get( 'lime' ) )
+                        #     currentBuild.args.append( ('-lib' , 'lime') )
                         # end temporary fix #175
                         currentBuild.libs.append( HaxeLib.get( name ) )
                         currentBuild.args.append( ("-lib" , name) )
@@ -1531,6 +1531,18 @@ class HaxeComplete( sublime_plugin.EventListener ):
                     print("Flambe completion error: " + err)
                 else:
                     args += [(arg,) for arg in res.split("\n")]
+                args.extend( build.args )
+            elif build.nmml is not None :
+                settings = view.settings()
+                haxelib_path = settings.get("haxelib_path" , "haxelib")
+                print(build.nmml, HaxeBuild.nme_target[1].split(" ")[0])
+                res, err = runcmd( [
+                    haxelib_path, 'run', 'openfl', 'display',
+                    build.nmml, HaxeBuild.nme_target[1].split(" ")[0]] )
+                if err :
+                    print("OpenFl completion error: " + err)
+                else:
+                    args += [(arg,) for arg in res.split("\n")]
             else:
                 args.append( ("--no-output",) )
                 output = build.output
@@ -1539,7 +1551,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 #args.append( ("-cp" , plugin_path ) )
                 #args.append( ("--macro" , "SourceTools.complete()") )
 
-        args.extend( build.args )
+                args.extend( build.args )
 
         haxepath = settings.get( 'haxe_path' , 'haxe' )
         cmd = [haxepath]
