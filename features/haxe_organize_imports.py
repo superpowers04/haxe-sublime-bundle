@@ -6,25 +6,26 @@ from os.path import basename
 
 try:  # Python 3
     from .haxe_helper import packageLine, show_quick_panel, \
-        typeDecl, HaxeComplete_inst
+        typeDecl, HaxeComplete_inst, comments
     from .haxe_generate_code_helper import count_blank_lines
 except (ValueError):  # Python 2
     from haxe_helper import packageLine, show_quick_panel, \
-        typeDecl, HaxeComplete_inst
+        typeDecl, HaxeComplete_inst, comments
     from haxe_generate_code_helper import count_blank_lines
 
 
-type_re = re.compile('[\w.]*[A-Z]\w*')
-word_re = re.compile('\\b[_a-zA-Z]\w*\\b')
-conditions_re = re.compile('[ \t]*#(if|elseif|else|end)', re.M)
-import_line_re = re.compile(
+re_type = re.compile(r'[\w.]*[A-Z]\w*')
+re_word = re.compile(r'\b[_a-zA-Z]\w*\b')
+re_string = re.compile(r'(["\'])(?:\\1|.)*?\1', re.M | re.S)
+re_conditions = re.compile(r'[ \t]*#(if|elseif|else|end)', re.M)
+re_import_line = re.compile(
     '^([ \t]*)import\s+'
     '('
     '((\\b[a-z]\w*\.)*)'
     '((\\b[A-Z]\w*\.?|\*)+)'
     '(\\b[_a-z]\w*|\*)?'
     ')\s*;', re.M)
-using_line_re = re.compile(
+re_using_line = re.compile(
     '^([ \t]*)using\s+'
     '('
     '((\\b[a-z]\w*\.)*)'
@@ -81,7 +82,7 @@ def get_full_imp(imppath, impname):
 def get_imported_clname_map(src, imp_to_ignore_map=None):
     dct = {}
 
-    for mo in import_line_re.finditer(src):
+    for mo in re_import_line.finditer(src):
         imp = mo.group(2)
         if imp_to_ignore_map is not None and imp in imp_to_ignore_map:
             continue
@@ -105,6 +106,8 @@ def get_module_map(typenames):
                 dct[modules] = True
         else:
             for module in modules:
+                if not module:
+                    continue
                 if not is_package(module):
                     dct[module] = True
 
@@ -114,19 +117,30 @@ def get_module_map(typenames):
 def get_used_typename_map(src):
     dct = {}
 
-    for mo in type_re.finditer(src):
-        if '.' not in mo.group(0):
-            dct[mo.group(0)] = True
+    for mo in re_type.finditer(src):
+        tp = mo.group(0)
+        if '.' not in tp:
+            if is_type(tp):
+                dct[tp] = True
+        else:
+            words = tp.split('.')
+            for word in words:
+                if is_type(word):
+                    dct[word] = True
 
+    # print('\nOI: Used typenames')
+    # print('\n'.join([i for i in sorted(dct.keys())]))
     return dct
 
 
 def get_used_words_map(src):
     dct = {}
 
-    for mo in word_re.finditer(src):
+    for mo in re_word.finditer(src):
         dct[mo.group(0)] = True
 
+    # print('\nOI: Used words')
+    # print('\n'.join([i for i in sorted(dct.keys())]))
     return dct
 
 
@@ -199,7 +213,7 @@ def search_conditional_regions(src):
     lines = []
     regions = []
 
-    for mo in conditions_re.finditer(src):
+    for mo in re_conditions.finditer(src):
         lines.append((mo.start(0), mo.group(1) == 'end'))
 
     last_pos = -1
@@ -239,10 +253,6 @@ class HaxeOrganizeImportsEdit(sublime_plugin.TextCommand):
             ins += '%simport %s;\n' % (indent, imp)
 
         self.view.insert(edit, pos, ins)
-
-        self.view.sel().clear()
-        self.view.sel().add(sublime.Region(pos, pos))
-        self.view.show_at_center(pos)
 
     def remove_imports(self, edit):
         lines = HaxeOrganizeImports.active_inst.lines_to_remove
@@ -353,14 +363,23 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         if self.sort:
             self.imps_to_add.sort()
 
+        if ''.join(self.imports_before) == ''.join(self.imps_to_add):
+            sublime.status_message('Allready organized')
+            self.clean()
+            return
+
         self.window.run_command('haxe_organize_imports_edit')
 
     def extract_imports(self):
         src = get_view_src(self.window.active_view())
+        src = comments.sub('', src)
+        src = re_string.sub('', src)
+
         self.src_wo_imports = src
         conditional_regions = search_conditional_regions(src)
         self.imp_to_remove_map = {}
         self.imp_to_ignore_map = {}
+        self.imports_before = []
         self.indent = ''
         self.insert_pos = -1
         self.imps_to_add = []
@@ -370,9 +389,10 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         self.lines_to_remove = []
         offset = 0
 
-        for mo in import_line_re.finditer(src):
+        for mo in re_import_line.finditer(src):
             imp = mo.group(2)
             imppath, _, impname = imp.rpartition('.')
+            self.imports_before.append(imp)
 
             self.src_wo_imports = \
                 self.src_wo_imports[:mo.start(0) - offset] + \
@@ -405,7 +425,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
                     get_full_imp(imppath, impname))
 
         offset = 0
-        for mo in using_line_re.finditer(self.src_wo_imports):
+        for mo in re_using_line.finditer(self.src_wo_imports):
             self.src_wo_imports = \
                 self.src_wo_imports[:mo.start(0) - offset] + \
                 self.src_wo_imports[mo.end(0) - offset + 1:]
@@ -475,6 +495,13 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         options = []
 
         for package in HaxeOrganizeImports.build_type_map[impname]:
+            if package == '':
+                self.missing_impnames_to_prompt.pop()
+                if not self.missing_impnames_to_prompt:
+                    self.complete_adding_unimported_classes()
+                else:
+                    self.prompt_classes_to_import()
+                return
             options.append('import %s' % get_full_imp(package, impname))
 
         show_quick_panel(
@@ -582,5 +609,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
                 get_full_imp(
                     HaxeOrganizeImports.build_type_map[typename], typename))
 
+        # print('\nOI: Missing imports')
+        # print('\n'.join(self.missing_imps))
         self.missing_impnames_to_prompt = \
             list(unimported_typenames_to_prompt_map.keys())
