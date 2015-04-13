@@ -1535,7 +1535,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             elif build.nmml is not None :
                 settings = view.settings()
                 haxelib_path = settings.get("haxelib_path" , "haxelib")
-                print(build.nmml, HaxeBuild.nme_target[1].split(" ")[0])
+                # print(build.nmml, HaxeBuild.nme_target[1].split(" ")[0])
                 res, err = runcmd( [
                     haxelib_path, 'run', 'openfl', 'display',
                     build.nmml, HaxeBuild.nme_target[1].split(" ")[0]] )
@@ -1906,8 +1906,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def get_haxe_completions( self , view , offset ):
-        print("OFFSET");
-        print(offset);
+        # print("OFFSET");
+        # print(offset);
         src = view.substr(sublime.Region(0, view.size()))
         fn = view.file_name()
         src_dir = os.path.dirname(fn)
