@@ -405,7 +405,7 @@
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>\b(if|return|while|for|return|break|case|continue|default|get|set|dynamic|never|do|while|for|switch|if|else)\b</string>
+					<string>\b(if|return|while|for|return|break|case|continue|do|while|for|switch|if|else)\b</string>
 					<key>name</key>
 					<string>keyword.control.haxe.flow-control.2</string>
 				</dict>
@@ -466,6 +466,18 @@
 				<dict>
 					<key>match</key>
 					<string>\b(from|to)\b</string>
+					<key>name</key>
+					<string>keyword.other.haxe.2</string>
+				</dict>
+			</array>
+		</dict>
+		<key>keywords-accessor</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>\b(default|get|set|dynamic|never|null)\b</string>
 					<key>name</key>
 					<string>keyword.other.haxe.2</string>
 				</dict>
@@ -1680,7 +1692,7 @@
 			<key>begin</key>
 			<string>(?&lt;=\w)</string>
 			<key>end</key>
-			<string>([\{;])</string>
+			<string>(\{)|(?=;)</string>
 			<key>endCaptures</key>
 			<dict>
 				<key>1</key>
@@ -1737,6 +1749,46 @@
 				</dict>
 			</array>
 		</dict>
+		<key>variable-accessors</key>
+		<dict>
+			<key>begin</key>
+			<string>(\()</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.parameters.begin.haxe.2</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>(\))</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.parameters.end.haxe.2</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>meta.parameters.haxe.2</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#operator-optional</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#keywords-accessor</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#punctuation-separator</string>
+				</dict>
+			</array>
+		</dict>
 		<key>variable-name</key>
 		<dict>
 			<key>begin</key>
@@ -1750,7 +1802,7 @@
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>([_a-z]\w*)</string>
+			<string>([_a-zA-Z]\w*)</string>
 			<key>endCaptures</key>
 			<dict>
 				<key>1</key>
@@ -1772,6 +1824,10 @@
 			<string>meta.post.haxe.2</string>
 			<key>patterns</key>
 			<array>
+				<dict>
+					<key>include</key>
+					<string>#variable-accessors</string>
+				</dict>
 				<dict>
 					<key>include</key>
 					<string>#block</string>
