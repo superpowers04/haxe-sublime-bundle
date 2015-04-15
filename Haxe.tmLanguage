@@ -737,6 +737,10 @@
 			<array>
 				<dict>
 					<key>include</key>
+					<string>#type-parameters</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#block</string>
 				</dict>
 				<dict>
@@ -1356,6 +1360,10 @@
 			<array>
 				<dict>
 					<key>include</key>
+					<string>#type-parameters</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#modifiers-inheritance</string>
 				</dict>
 				<dict>
@@ -1424,6 +1432,10 @@
 			<array>
 				<dict>
 					<key>include</key>
+					<string>#type-parameters</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#block</string>
 				</dict>
 				<dict>
@@ -1473,6 +1485,10 @@
 			</dict>
 			<key>patterns</key>
 			<array>
+				<dict>
+					<key>include</key>
+					<string>#type-parameters</string>
+				</dict>
 				<dict>
 					<key>include</key>
 					<string>#punctuation-brackets</string>
@@ -1611,6 +1627,42 @@
 				<dict>
 					<key>include</key>
 					<string>#support-class-name</string>
+				</dict>
+			</array>
+		</dict>
+		<key>type-parameters</key>
+		<dict>
+			<key>begin</key>
+			<string>(\&lt;)</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.parameters.begin.haxe.2</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>(\&gt;)</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.parameters.end.haxe.2</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>meta.type.parameters.haxe.2</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#block</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#block-contents</string>
 				</dict>
 			</array>
 		</dict>
@@ -1757,6 +1809,10 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#variable-assign</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#variable-name-post</string>
 				</dict>
 			</array>
@@ -1801,6 +1857,32 @@
 				</dict>
 			</array>
 		</dict>
+		<key>variable-assign</key>
+		<dict>
+			<key>begin</key>
+			<string>(=)</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.operator.assignment.haxe.2</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>(?=;)</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#block</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#block-contents</string>
+				</dict>
+			</array>
+		</dict>
 		<key>variable-name</key>
 		<dict>
 			<key>begin</key>
@@ -1831,18 +1913,12 @@
 			<key>begin</key>
 			<string>(?&lt;=\w)</string>
 			<key>end</key>
-			<string>(?=;)</string>
-			<key>name</key>
-			<string>meta.post.haxe.2</string>
+			<string>(?=;)|(?==)</string>
 			<key>patterns</key>
 			<array>
 				<dict>
 					<key>include</key>
 					<string>#variable-accessors</string>
-				</dict>
-				<dict>
-					<key>include</key>
-					<string>#block</string>
 				</dict>
 				<dict>
 					<key>include</key>
