@@ -7,19 +7,19 @@ from os.path import basename
 try:  # Python 3
     from .haxe_helper import packageLine, show_quick_panel, \
         typeDecl, HaxeComplete_inst, comments
-    from .haxe_generate_code_helper import count_blank_lines
+    from .haxe_generate_code_helper import count_blank_lines, get_blank_lines
 except (ValueError):  # Python 2
     from haxe_helper import packageLine, show_quick_panel, \
         typeDecl, HaxeComplete_inst, comments
-    from haxe_generate_code_helper import count_blank_lines
+    from haxe_generate_code_helper import count_blank_lines, get_blank_lines
 
 
 re_type = re.compile(r'[\w.]*[A-Z]\w*')
 re_word = re.compile(r'\b[_a-zA-Z]\w*\b')
-re_string = re.compile(r'(["\'])(?:\\1|.)*?\1', re.M | re.S)
+re_string = re.compile(r'(["\'])(?:\\\\|\\\1|.)*?\1', re.M | re.S)
 re_conditions = re.compile(r'[ \t]*#(if|elseif|else|end)', re.M)
 re_import_line = re.compile(
-    '^([ \t]*)import\s+'
+    '([ \t]*)import\s+'
     '('
     '((\\b[a-z]\w*\.)*)'
     '((\\b[A-Z]\w*\.?|\*)+)'
@@ -149,17 +149,27 @@ def get_view_src(view):
 
 
 def init_build_class_map(view):
-    if HaxeOrganizeImports.std_type_map is None:
-        HaxeOrganizeImports.std_type_map = \
-            init_type_map(HaxeComplete_inst().__class__.stdClasses)
+    HaxeOrganizeImports.std_type_map = init_type_map(
+        HaxeComplete_inst().__class__.stdClasses)
 
-    if HaxeOrganizeImports.build_classes is None:
-        build = HaxeComplete_inst().get_build(view)
-        HaxeOrganizeImports.build_classes, _ = build.get_types()
+    # print('OI: Std')
+    # lst = HaxeComplete_inst().__class__.stdClasses
+    # print("\n".join([k for k in sorted(lst)]))
+
+    build = HaxeComplete_inst().get_build(view)
+    HaxeOrganizeImports.build_classes, _ = build.get_types()
+
+    # print('OI: Build')
+    # lst = HaxeOrganizeImports.build_classes
+    # print("\n".join([k for k in sorted(lst)]))
 
     HaxeOrganizeImports.build_type_map = init_type_map(
         HaxeOrganizeImports.build_classes,
         HaxeOrganizeImports.std_type_map)
+
+    # print('OI: Map')
+    # dct = HaxeOrganizeImports.build_type_map
+    # print("\n".join([k + ': ' + str(dct[k]) for k in sorted(dct.keys())]))
 
 
 def init_type_map(types, type_map=None):
@@ -197,9 +207,9 @@ def is_package(package):
 def is_string(value):
     val = False
     try:
-        val = isinstance(value, str)
-    except NameError:
         val = isinstance(value, basestring)
+    except:
+        val = isinstance(value, str)
 
     return val
 
@@ -233,33 +243,38 @@ class HaxeOrganizeImportsEdit(sublime_plugin.TextCommand):
     def insert_imports(self, edit):
         view = self.view
         imps = HaxeOrganizeImports.active_inst.imps_to_add
-        if not imps:
-            return
 
         pos = HaxeOrganizeImports.active_inst.insert_pos
         indent = HaxeOrganizeImports.active_inst.indent
+        bl_group = get_blank_lines(view, 'haxe_bl_group', 1)
         ins = ''
 
-        before, after = count_blank_lines(view, pos)
-
-        next_line_pos = view.full_line(pos).end()
-        for i in range(0, after - 1):
-            view.erase(edit, view.full_line(next_line_pos))
-
-        for i in range(0, 2 - before):
-            ins += '\n'
+        if pos > 0:
+            if imps:
+                ins += '\n'
+            ins += bl_group
 
         for imp in imps:
             ins += '%simport %s;\n' % (indent, imp)
 
+        if imps:
+            ins = ins[:-1] + bl_group
+
         self.view.insert(edit, pos, ins)
 
     def remove_imports(self, edit):
-        lines = HaxeOrganizeImports.active_inst.lines_to_remove
-        offset = 0
+        view = self.view
 
-        for pt in lines:
-            offset += erase_line(self.view, edit, pt - offset)
+        for rgn in reversed(HaxeOrganizeImports.active_inst.rgns_to_remove):
+            view.erase(edit, rgn)
+
+        pos = HaxeOrganizeImports.active_inst.insert_pos
+        _, after = count_blank_lines(view, pos)
+
+        next_line_pos = view.full_line(pos).end()
+        if after > 1:
+            for i in range(0, after - 1):
+                view.erase(edit, view.full_line(next_line_pos))
 
     def run(self, edit):
         if not HaxeOrganizeImports.active_inst:
@@ -269,47 +284,6 @@ class HaxeOrganizeImportsEdit(sublime_plugin.TextCommand):
         self.insert_imports(edit)
 
         HaxeOrganizeImports.active_inst.clean()
-
-
-class HaxeOrganizeImportsEventListener(sublime_plugin.EventListener):
-
-    def add_build_change_callback(self, view):
-        if is_haxe_scope(view):
-            view.settings().add_on_change(
-                'haxe-build-id',
-                lambda: self.on_build_change(view))
-
-    def on_build_change(self, view):
-        build = HaxeComplete_inst().get_build(view)
-        if build is not None:
-            HaxeOrganizeImports.build_classes, _ = build.get_types()
-            HaxeOrganizeImports.build_type_map = None
-
-    def on_load(self, view):
-        self.add_build_change_callback(view)
-
-    def on_pre_save(self, view):
-        if not is_haxe_scope(view):
-            return
-
-        src = get_view_src(view)
-        declared_typename_map = get_declared_typename_map(src)
-        if not declared_typename_map:
-            return
-
-        cur_modulename = get_cur_modulename(view)
-        cur_package = get_cur_package(src)
-
-        if HaxeOrganizeImports.build_type_map is None:
-            init_build_class_map(view)
-
-        for typename in declared_typename_map:
-            if typename == cur_modulename:
-                continue
-            add_type_path(
-                HaxeOrganizeImports.build_type_map,
-                typename,
-                get_full_imp(cur_package, cur_modulename))
 
 
 class HaxeOrganizeImports(sublime_plugin.WindowCommand):
@@ -341,7 +315,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
     def clean(self):
         self.imps_to_add = None
         self.imp_to_remove_map = None
-        self.lines_to_remove = None
+        self.rgns_to_remove = None
         self.missing_imps = None
         self.used_words_map = None
         self.used_typename_map = None
@@ -386,7 +360,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         splitted_imps_to_add = []
         wildcard_path_map = {}
         cur_package = get_cur_package(src)
-        self.lines_to_remove = []
+        self.rgns_to_remove = []
         offset = 0
 
         for mo in re_import_line.finditer(src):
@@ -414,7 +388,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
             if impname == '*':
                 wildcard_path_map[imppath] = True
 
-            self.lines_to_remove.append(mo.start(0))
+            self.rgns_to_remove.append(sublime.Region(mo.start(0), mo.end(0)))
 
         while True:
             if not splitted_imps_to_add:
@@ -434,8 +408,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         self.used_words_map = get_used_words_map(self.src_wo_imports)
         self.used_typename_map = get_used_typename_map(self.src_wo_imports)
 
-        if self.insert_pos == -1:
-            self.insert_pos = self.get_insert_pos(src)
+        self.insert_pos = self.get_insert_pos(src)
 
     def get_insert_pos(self, src):
         mo = packageLine.search(src)
@@ -447,8 +420,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
 
     @staticmethod
     def get_type_map(view):
-        if HaxeOrganizeImports.build_type_map is None:
-            init_build_class_map(view)
+        init_build_class_map(view)
 
         return HaxeOrganizeImports.build_type_map
 
@@ -550,9 +522,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
 
     def run(self, add=True, sort=True, remove=True, auto_remove=False):
         view = self.window.active_view()
-        if HaxeOrganizeImports.active_inst or \
-                view is None or \
-                not is_haxe_scope(view):
+        if view is None or not is_haxe_scope(view):
             return
 
         HaxeOrganizeImports.active_inst = self
@@ -560,8 +530,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         self.sort = sort
         self.remove = remove
 
-        if HaxeOrganizeImports.build_type_map is None:
-            init_build_class_map(self.window.active_view())
+        init_build_class_map(self.window.active_view())
 
         self.extract_imports()
         self.remove_unused_imports()
