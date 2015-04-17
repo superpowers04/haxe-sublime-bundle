@@ -47,13 +47,26 @@ class TestHxml(DeferrableTestCase):
         # syntax should be Haxe
         self.assertTrue("Haxe" in view.settings().get('syntax'))
 
-        # test build
+        # test build (Command+B)
         self.window.run_command("build")
         yield 100
         output_path = os.path.join(hxml_simple_path, "Main.n")
         self.assertTrue(os.path.isfile(output_path))
+        os.remove(output_path)
+
+        # test build (Ctrl+Enter)
+        self.window.run_command("haxe_run_build")
+        yield 100
+        output_path = os.path.join(hxml_simple_path, "Main.n")
+        self.assertTrue(os.path.isfile(output_path))
+        os.remove(output_path)
+
+        self.window.run_command("haxe_save_all_and_build")
+        yield 100
+        output_path = os.path.join(hxml_simple_path, "Main.n")
+        self.assertTrue(os.path.isfile(output_path))
+        os.remove(output_path)
 
         # clean up
-        os.remove(output_path)
         self.window.focus_view(view)
         self.window.run_command("close_file")
