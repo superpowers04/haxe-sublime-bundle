@@ -1,4 +1,5 @@
-import sublime, sys, os, subprocess
+import sublime, os, time
+from functools import partial
 from unittest import TestCase
 
 version = sublime.version()
@@ -39,6 +40,12 @@ class TestHxml(DeferrableTestCase):
             }
         self.window.set_project_data(project_data)
 
+    def assertTrueWait(self, expect, timeout_sec = 5):
+        t = time.clock()
+        while time.clock() - t < timeout_sec and not expect():
+            yield
+        self.assertTrue(expect())
+
     def test_hxml_simple(self):
         hxml_simple_path = os.path.join(root_path, "tests", "projects", "hxml_simple")
         self.set_project_folder(hxml_simple_path)
@@ -47,25 +54,17 @@ class TestHxml(DeferrableTestCase):
         # syntax should be Haxe
         self.assertTrue("Haxe" in view.settings().get('syntax'))
 
-        # test build (Command+B)
-        self.window.run_command("build")
-        yield 100
         output_path = os.path.join(hxml_simple_path, "Main.n")
-        self.assertTrue(os.path.isfile(output_path))
-        os.remove(output_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
 
-        # test build (Ctrl+Enter)
-        self.window.run_command("haxe_run_build")
-        yield 100
-        output_path = os.path.join(hxml_simple_path, "Main.n")
-        self.assertTrue(os.path.isfile(output_path))
-        os.remove(output_path)
-
-        self.window.run_command("haxe_save_all_and_build")
-        yield 100
-        output_path = os.path.join(hxml_simple_path, "Main.n")
-        self.assertTrue(os.path.isfile(output_path))
-        os.remove(output_path)
+        # test build (Command+B and Ctrl+Enter)
+        expect = partial(os.path.exists, output_path)
+        for cmd in ["build", "haxe_run_build", "haxe_save_all_and_build"]:
+            self.window.run_command(cmd)
+            for _ in self.assertTrueWait(expect):
+                yield
+            os.remove(output_path)
 
         # clean up
         self.window.focus_view(view)
