@@ -1513,7 +1513,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         #args.append( ("--times" , "-v" ) )
 
         if not autocomplete :
-            pass
+            args.extend( build.args )
             #args.append( ("--times" , "-v" ) )
         else:
 
@@ -1524,34 +1524,34 @@ class HaxeComplete( sublime_plugin.EventListener ):
             args.append( ("--display", display_arg ) )
             args.append( ("-D", "st_display" ) )
 
-        if build.yaml is not None :
-            # Call out to `flambe haxe-flags` for Flambe completion
-            res, err = runcmd( ["flambe","--config" , build.yaml, "haxe-flags"] )
-            if err :
-                print("Flambe completion error: " + err)
+            if build.yaml is not None :
+                # Call out to `flambe haxe-flags` for Flambe completion
+                res, err = runcmd( ["flambe","--config" , build.yaml, "haxe-flags"] )
+                if err :
+                    print("Flambe completion error: " + err)
+                else:
+                    args += [(arg,) for arg in res.split("\n")]
+                args.extend( build.args )
+            elif build.nmml is not None :
+                settings = view.settings()
+                haxelib_path = settings.get("haxelib_path" , "haxelib")
+                # print(build.nmml, HaxeBuild.nme_target[1].split(" ")[0])
+                res, err = runcmd( [
+                    haxelib_path, 'run', 'openfl', 'display',
+                    build.nmml, HaxeBuild.nme_target[1].split(" ")[0]] )
+                if err :
+                    print("OpenFl completion error: " + err)
+                else:
+                    args += [(arg,) for arg in res.split("\n")]
             else:
-                args += [(arg,) for arg in res.split("\n")]
-            args.extend( build.args )
-        elif build.nmml is not None :
-            settings = view.settings()
-            haxelib_path = settings.get("haxelib_path" , "haxelib")
-            # print(build.nmml, HaxeBuild.nme_target[1].split(" ")[0])
-            res, err = runcmd( [
-                haxelib_path, 'run', 'openfl', 'display',
-                build.nmml, HaxeBuild.nme_target[1].split(" ")[0]] )
-            if err :
-                print("OpenFl completion error: " + err)
-            else:
-                args += [(arg,) for arg in res.split("\n")]
-        else:
-            args.append( ("--no-output",) )
-            output = build.output
-            if output is None :
-                output = "no-output"
-            #args.append( ("-cp" , plugin_path ) )
-            #args.append( ("--macro" , "SourceTools.complete()") )
+                args.append( ("--no-output",) )
+                output = build.output
+                if output is None :
+                    output = "no-output"
+                #args.append( ("-cp" , plugin_path ) )
+                #args.append( ("--macro" , "SourceTools.complete()") )
 
-            args.extend( build.args )
+                args.extend( build.args )
 
         haxepath = settings.get( 'haxe_path' , 'haxe' )
         cmd = [haxepath]
