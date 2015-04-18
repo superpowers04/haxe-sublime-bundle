@@ -20,10 +20,6 @@
 	<array>
 		<dict>
 			<key>include</key>
-			<string>#preprocessors</string>
-		</dict>
-		<dict>
-			<key>include</key>
 			<string>#all</string>
 		</dict>
 	</array>
@@ -163,10 +159,6 @@
 			<array>
 				<dict>
 					<key>include</key>
-					<string>#preprocessors</string>
-				</dict>
-				<dict>
-					<key>include</key>
 					<string>#arrays</string>
 				</dict>
 				<dict>
@@ -196,10 +188,6 @@
 				<dict>
 					<key>include</key>
 					<string>#keywords</string>
-				</dict>
-				<dict>
-					<key>include</key>
-					<string>#preprocessors</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -409,6 +397,12 @@
 		<dict>
 			<key>patterns</key>
 			<array>
+				<dict>
+					<key>match</key>
+					<string>(#(if|elseif|else|end)\b)</string>
+					<key>name</key>
+					<string>keyword.control.directive.conditional.haxe.2</string>
+				</dict>
 				<dict>
 					<key>match</key>
 					<string>\b(try|catch|throw)\b</string>
@@ -875,48 +869,6 @@
 				<dict>
 					<key>include</key>
 					<string>#block-contents</string>
-				</dict>
-			</array>
-		</dict>
-		<key>preprocessors</key>
-		<dict>
-			<key>begin</key>
-			<string>((#)(if|elseif))</string>
-			<key>beginCaptures</key>
-			<dict>
-				<key>1</key>
-				<dict>
-					<key>name</key>
-					<string>keyword.control.directive.conditional.haxe.2</string>
-				</dict>
-				<key>2</key>
-				<dict>
-					<key>name</key>
-					<string>punctuation.definition.variable.haxe.2</string>
-				</dict>
-			</dict>
-			<key>end</key>
-			<string>(?=#elseif)|((#)end)</string>
-			<key>endCaptures</key>
-			<dict>
-				<key>1</key>
-				<dict>
-					<key>name</key>
-					<string>keyword.control.directive.conditional.haxe.2</string>
-				</dict>
-				<key>2</key>
-				<dict>
-					<key>name</key>
-					<string>punctuation.definition.variable.haxe.2</string>
-				</dict>
-			</dict>
-			<key>name</key>
-			<string>meta.preprocessors.haxe.2</string>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>include</key>
-					<string>#all</string>
 				</dict>
 			</array>
 		</dict>
