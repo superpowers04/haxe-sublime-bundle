@@ -18,16 +18,18 @@ except (ValueError):  # Python 2
 class HaxeColorScheme(sublime_plugin.EventListener):
 
     def __init__(self):
-        self.inited = False
+        self.init()
 
-    def init(self, view):
-        if view.score_selector(0, 'source.haxe.2') == 0:
+    def init(self):
+        if sublime.active_window() is None or \
+                sublime.active_window().active_view() is None:
+            sublime.set_timeout(self.init, 200)
             return
 
-        self.inited = True
-        view.settings().add_on_change(
-            'color_scheme', lambda: self.on_scheme_change(view))
-        self.on_scheme_change(view)
+        self.settings = sublime.load_settings('Preferences.sublime-settings')
+        self.settings.add_on_change(
+            'color_scheme', lambda: self.parse_scheme())
+        self.parse_scheme()
 
     @staticmethod
     def get_color(name):
@@ -53,15 +55,11 @@ class HaxeColorScheme(sublime_plugin.EventListener):
 
         return HaxeColorScheme.styles
 
-    def on_activated(self, view):
-        if not self.inited:
-            self.init(view)
-
-    def on_scheme_change(self, view):
+    def parse_scheme(self):
         HaxeColorScheme.styles = None
         HaxeColorScheme.color_map = None
 
-        color_scheme = view.settings().get('color_scheme')
+        color_scheme = self.settings.get('color_scheme')
 
         try:
             if int(sublime.version()) >= 3000:
@@ -92,10 +90,6 @@ class HaxeColorScheme(sublime_plugin.EventListener):
                     dct.update(d.settings)
 
         HaxeColorScheme.color_map = dct
-
-    def on_load(self, view):
-        if not self.inited:
-            self.init(view)
 
 
 class HaxeShowPopup(sublime_plugin.TextCommand):
