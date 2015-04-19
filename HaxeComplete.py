@@ -482,7 +482,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         return classes, packs
 
 
-    def highlight_errors( self , view ) :
+    def highlight_errors( self , view , time=0 ) :
         fn = view.file_name()
         line_regions = []
         char_regions = []
@@ -491,7 +491,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             return
 
         for e in self.errors :
-            if os.path.samefile(e["file"], fn) :
+            if e["file"] and os.path.samefile(e["file"], fn) :
                 metric = e["metric"]
                 l = e["line"]
                 left = e["from"]
@@ -512,6 +512,12 @@ class HaxeComplete( sublime_plugin.EventListener ):
                     line_regions.append( sublime.Region(a,b))
 
                 view.set_status("haxe-status" , "Error: " + e["message"] )
+
+                if time > 0:
+                    # show once
+                    e["file"] = ''
+                    sublime.set_timeout(
+                        lambda: self.highlight_errors(view), time)
 
         view.add_regions("haxe-error-lines" , line_regions , "invalid" , "light_x_bright" , sublime.DRAW_OUTLINED )
         view.add_regions("haxe-error" , char_regions , "invalid" , "light_x_bright" , sublime.DRAW_OUTLINED )
@@ -1769,6 +1775,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
                     status = ""
 
             self.errors = self.extract_errors( err, cwd )
+            self.highlight_errors( view, 5000 )
 
         # print(comps)
         if mode == "type":
