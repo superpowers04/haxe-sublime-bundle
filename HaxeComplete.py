@@ -646,11 +646,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
                         if not mFile is None:
                             outp = mFile.group(2)
                     elif (tag == "haxelib"):
-                        # temporary fix #175
-                        # if name == 'openfl':
-                        #     currentBuild.libs.append( HaxeLib.get( 'lime' ) )
-                        #     currentBuild.args.append( ('-lib' , 'lime') )
-                        # end temporary fix #175
                         currentBuild.libs.append( HaxeLib.get( name ) )
                         currentBuild.args.append( ("-lib" , name) )
                     elif (tag == "haxedef"):
@@ -994,24 +989,29 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         self.selectingBuild = False
 
-        if forcePanel and self.currentBuild is not None: # choose NME target
+        if self.currentBuild is not None:
 
-            if self.currentBuild.nmml is not None:
-                sublime.status_message("Please select a NME target")
-                nme_targets = []
-                for t in HaxeBuild.nme_targets :
-                    nme_targets.append( t[0] )
+            if forcePanel: # choose target
+                if self.currentBuild.nmml is not None:
+                    sublime.status_message("Please select a NME target")
+                    nme_targets = []
+                    for t in HaxeBuild.nme_targets :
+                        nme_targets.append( t[0] )
 
-                show_quick_panel( view.window() , nme_targets, lambda i : self.select_nme_target(i, view))
+                    show_quick_panel( view.window() , nme_targets, lambda i : self.select_nme_target(i, view))
 
-            elif self.currentBuild.yaml is not None:
-                sublime.status_message("Please select a Flambe target")
-                flambe_targets = []
-                for t in HaxeBuild.flambe_targets :
-                    flambe_targets.append( t[0] )
+                elif self.currentBuild.yaml is not None:
+                    sublime.status_message("Please select a Flambe target")
+                    flambe_targets = []
+                    for t in HaxeBuild.flambe_targets :
+                        flambe_targets.append( t[0] )
 
-                show_quick_panel( view.window() , flambe_targets, lambda i : self.select_flambe_target(i, view))
-
+                    show_quick_panel( view.window() , flambe_targets, lambda i : self.select_flambe_target(i, view))
+            else:
+                if self.currentBuild.nmml is not None:
+                    args = self.extract_nme_completion_args(view)
+                    if args:
+                        self.currentBuild.args = args
 
 
     def select_nme_target( self, i, view ):
@@ -1026,6 +1026,28 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if self.currentBuild.nmml is not None:
             HaxeBuild.nme_target = target
             view.set_status( "haxe-build" , self.currentBuild.to_string() )
+
+        args = self.extract_nme_completion_args(view)
+        if args:
+            self.currentBuild.args = args
+
+
+    def extract_nme_completion_args(self, view):
+        lib = 'nme'
+        if self.currentBuild.lime:
+            lib = 'lime'
+        elif self.currentBuild.openfl:
+            lib = 'openfl'
+        target = HaxeBuild.nme_target[1].split(" ")[0]
+
+        res, err = runcmd( [
+            view.settings().get("haxelib_path" , "haxelib"),
+            'run', lib, 'display', self.currentBuild.nmml, target] )
+
+        if err :
+            return None
+
+        return [(arg,) for arg in res.split("\n")]
 
     def select_flambe_target( self , i , view ):
         if i == -1:
@@ -1519,7 +1541,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         #args.append( ("--times" , "-v" ) )
 
         if not autocomplete :
-            args.extend( build.args )
+            pass
             #args.append( ("--times" , "-v" ) )
         else:
 
@@ -1537,18 +1559,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
                     print("Flambe completion error: " + err)
                 else:
                     args += [(arg,) for arg in res.split("\n")]
-                args.extend( build.args )
-            elif build.nmml is not None :
-                settings = view.settings()
-                haxelib_path = settings.get("haxelib_path" , "haxelib")
-                # print(build.nmml, HaxeBuild.nme_target[1].split(" ")[0])
-                res, err = runcmd( [
-                    haxelib_path, 'run', 'openfl', 'display',
-                    build.nmml, HaxeBuild.nme_target[1].split(" ")[0]] )
-                if err :
-                    print("OpenFl completion error: " + err)
-                else:
-                    args += [(arg,) for arg in res.split("\n")]
             else:
                 args.append( ("--no-output",) )
                 output = build.output
@@ -1557,7 +1567,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 #args.append( ("-cp" , plugin_path ) )
                 #args.append( ("--macro" , "SourceTools.complete()") )
 
-                args.extend( build.args )
+        args.extend( build.args )
 
         haxepath = settings.get( 'haxe_path' , 'haxe' )
         cmd = [haxepath]
@@ -1831,23 +1841,27 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def on_query_completions(self, view, prefix, locations):
-
-        pos = locations[0]
-        scopes = view.scope_name(pos).split()
-        #print(scopes)
-        offset = pos - len(prefix)
+        scope = view.scope_name(locations[0])
+        is_haxe = 'source.haxe.2' in scope
+        is_hxml = 'source.hxml' in scope
         comps = []
+
+        if not is_haxe and not is_hxml:
+            return comps
+
+        offset = locations[0] - len(prefix)
+
         if offset == 0 :
             return comps
 
-        for s in scopes :
-            if s == "keyword.control.directive.conditional.haxe.2" or s.split(".")[0] in ["string","comment"] :
-                return comps
+        if 'keyword.control.directive.conditional.haxe.2' in scope or \
+                'string' in scope or \
+                'comment' in scope:
+            return comps
 
-        if 'source.hxml' in scopes:
+        if is_hxml :
             comps = self.get_hxml_completions( view , offset )
-
-        if 'source.haxe.2' in scopes :
+        elif is_haxe :
             if view.file_name().endswith(".hxsl") :
                 comps = self.get_hxsl_completions( view , offset )
             else :
