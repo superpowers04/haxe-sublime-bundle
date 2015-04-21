@@ -482,7 +482,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         return classes, packs
 
 
-    def highlight_errors( self , view , time=0 ) :
+    def highlight_errors( self , view , duration=0 ) :
         fn = view.file_name()
         line_regions = []
         char_regions = []
@@ -491,7 +491,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             return
 
         for e in self.errors :
-            if e["file"] and os.path.samefile(e["file"], fn) :
+            if e and os.path.samefile(e["file"], fn) :
                 metric = e["metric"]
                 l = e["line"]
                 left = e["from"]
@@ -499,13 +499,16 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
                 if metric.startswith("character") :
                     # retrieve character positions from utf-8 bytes offset reported by compiler
-                    line = view.substr(view.line(view.text_point(l, 0))).encode("utf-8")
-                    left = len(line[:left].decode("utf-8"))
-                    right = len(line[:right].decode("utf-8"))
+                    try:
+                        line = view.substr(view.line(view.text_point(l, 0))).encode("utf-8")
+                        left = len(line[:left].decode("utf-8"))
+                        right = len(line[:right].decode("utf-8"))
 
-                    a = view.text_point(l,left)
-                    b = view.text_point(l,right)
-                    char_regions.append( sublime.Region(a,b))
+                        a = view.text_point(l,left)
+                        b = view.text_point(l,right)
+                        char_regions.append( sublime.Region(a,b))
+                    except:
+                        pass
                 else :
                     a = view.text_point(left,0)
                     b = view.text_point(right,0)
@@ -513,11 +516,13 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
                 view.set_status("haxe-status" , "Error: " + e["message"] )
 
-                if time > 0:
+                if duration > 0:
                     # show once
-                    e["file"] = ''
-                    sublime.set_timeout(
-                        lambda: self.highlight_errors(view), time)
+                    e.clear()
+
+        if duration > 0:
+            sublime.set_timeout(
+                lambda: self.highlight_errors(view), duration)
 
         view.add_regions("haxe-error-lines" , line_regions , "invalid" , "light_x_bright" , sublime.DRAW_OUTLINED )
         view.add_regions("haxe-error" , char_regions , "invalid" , "light_x_bright" , sublime.DRAW_OUTLINED )
