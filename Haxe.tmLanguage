@@ -900,13 +900,35 @@
 		</dict>
 		<key>regex</key>
 		<dict>
+			<key>begin</key>
+			<string>~/</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>string.regexp.begin.haxe.2</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>/[gimsu]*</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>string.regexp.end.haxe.2</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>string.regexp.haxe.2</string>
 			<key>patterns</key>
 			<array>
 				<dict>
 					<key>match</key>
-					<string>~/((?:\\/|[^/])+)/[gimsu]*</string>
+					<string>\\.</string>
 					<key>name</key>
-					<string>string.regexp.haxe.2</string>
+					<string>constant.character.escape.haxe.2</string>
 				</dict>
 			</array>
 		</dict>
