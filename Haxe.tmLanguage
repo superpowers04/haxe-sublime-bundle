@@ -911,13 +911,18 @@
 				</dict>
 			</dict>
 			<key>end</key>
-			<string>/[gimsu]*</string>
+			<string>(/[gimsu]*)|(\n$)</string>
 			<key>endCaptures</key>
 			<dict>
 				<key>1</key>
 				<dict>
 					<key>name</key>
 					<string>string.regexp.end.haxe.2</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>invalid.illegal.haxe.2</string>
 				</dict>
 			</dict>
 			<key>name</key>
