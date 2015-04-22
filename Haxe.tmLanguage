@@ -159,6 +159,10 @@
 			<array>
 				<dict>
 					<key>include</key>
+					<string>#regex</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#arrays</string>
 				</dict>
 				<dict>
@@ -216,10 +220,6 @@
 				<dict>
 					<key>include</key>
 					<string>#punctuation-brackets</string>
-				</dict>
-				<dict>
-					<key>include</key>
-					<string>#regex</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -904,7 +904,7 @@
 			<array>
 				<dict>
 					<key>match</key>
-					<string>~/((?:\\/|[^/])+)/</string>
+					<string>~/((?:\\/|[^/])+)/[gimsu]*</string>
 					<key>name</key>
 					<string>string.regexp.haxe.2</string>
 				</dict>
