@@ -161,6 +161,14 @@ inst = None
 
 documentationStore = {}
 
+class BuildCache:
+    def __init__(self, path, raw, build, target):
+        self.path = path
+        self.raw = raw
+        self.build = build
+        self.target = target
+
+
 class HaxeBuild :
 
     #auto = None
@@ -417,6 +425,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
     def __init__(self):
         #print("init haxecomplete")
         HaxeComplete.inst = self
+        self.build_cache = {}
 
     def __del__(self) :
         self.stop_server()
@@ -623,6 +632,16 @@ class HaxeComplete( sublime_plugin.EventListener ):
             if not os.path.exists( build ) :
                 continue
 
+            f = codecs.open( build , "r+", "utf-8" , "ignore" )
+            raw = f.read()
+
+            if build in self.build_cache and \
+                    self.build_cache[build].raw == raw:
+                currentBuild = self.build_cache[build].build
+                if currentBuild.main is not None :
+                    self.add_build( currentBuild )
+                continue
+
             currentBuild = HaxeBuild()
             currentBuild.hxml = build
             currentBuild.nmml = build
@@ -630,15 +649,15 @@ class HaxeComplete( sublime_plugin.EventListener ):
             currentBuild.lime = build.endswith("lime")
             buildPath = os.path.dirname(build)
 
-            # TODO delegate compiler options extractions to NME 3.2:
-            # runcmd("nme diplay project.nmml nme_target")
+            self.build_cache[build] = BuildCache(build, raw, currentBuild, None)
 
             outp = "NME"
-            f = codecs.open( build , "r+", "utf-8" , "ignore" )
-            while 1:
-                l = f.readline()
-                if not l :
-                    break;
+            lines = raw.splitlines()
+            for l in lines:
+            # while 1:
+                # l = f.readline()
+                # if not l :
+                #     break;
                 m = extractTag.search(l)
                 if not m is None:
                     #print(m.groups())
@@ -1014,9 +1033,13 @@ class HaxeComplete( sublime_plugin.EventListener ):
                     show_quick_panel( view.window() , flambe_targets, lambda i : self.select_flambe_target(i, view))
             else:
                 if self.currentBuild.nmml is not None:
-                    args = self.extract_nme_completion_args(view)
-                    if args:
-                        self.currentBuild.args = args
+                    bc = self.build_cache[self.currentBuild.nmml]
+                    if HaxeBuild.nme_target and \
+                            bc.target != HaxeBuild.nme_target:
+                        bc.target = HaxeBuild.nme_target
+                        args = self.extract_nme_completion_args(view)
+                        if args:
+                            self.currentBuild.args = args
 
 
     def select_nme_target( self, i, view ):
@@ -1031,6 +1054,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if self.currentBuild.nmml is not None:
             HaxeBuild.nme_target = target
             view.set_status( "haxe-build" , self.currentBuild.to_string() )
+
+            bc = self.build_cache[self.currentBuild.nmml]
+            bc.target = HaxeBuild.nme_target
 
         args = self.extract_nme_completion_args(view)
         if args:
