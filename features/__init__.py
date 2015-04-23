@@ -18,6 +18,7 @@ from .haxe_organize_imports import HaxeOrganizeImports, HaxeOrganizeImportsEdit
 from .haxe_reload_modules import reload_modules
 from .haxe_format import HaxeFormat
 from .haxe_helper import *
+from .haxe_errors import *
 
 print("Haxe : Reloading haxe module")
 

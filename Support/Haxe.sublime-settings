@@ -5,6 +5,16 @@
 	"haxe_smart_snippets" : true,
 	
 	/*
+		Available options: outline, fill, none
+	*/
+	"haxe_errors_style": "outline",
+
+	/*
+		Available options: dot, circle, none
+	*/
+	"haxe_errors_gutter_style": "dot",
+
+	/*
 		Fields order:
 		V - static variables
 		F - static functions

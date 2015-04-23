@@ -24,7 +24,6 @@ wordChars = re.compile("[a-z0-9._]", re.I)
 importLine = re.compile("^([ \t]*)import\s+([a-z0-9._*]+);", re.I | re.M)
 packageLine = re.compile("package\s*([a-z0-9.]*);", re.I)
 
-compilerOutput = re.compile("^(.+):(\\d+): (lines|characters?) (\\d+)(?:-(\\d+))? : (.*)$", re.M)
 compactFunc = re.compile("\(.*\)")
 compactProp = re.compile(":.*\.([a-z_0-9]+)", re.I)
 libLine = re.compile("([^:]*):[^\[]*\[(dev\:)?(.*)\]")

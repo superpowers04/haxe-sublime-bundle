@@ -38,11 +38,12 @@ try: # Python 3
 
     # Import the helper functions and regex helpers
     from .features.haxe_helper import runcmd, show_quick_panel, cache
-    from .features.haxe_helper import spaceChars, wordChars, importLine, packageLine, compilerOutput
+    from .features.haxe_helper import spaceChars, wordChars, importLine, packageLine
     from .features.haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
     from .features.haxe_helper import libFlag, skippable, inAnonymous, extractTag
     from .features.haxe_helper import variables, functions, functionParams, paramDefault
     from .features.haxe_helper import isType, comments, haxeVersion, haxeFileRegex, controlStruct
+    from .features.haxe_errors import highlight_errors, extract_errors
 
 except (ValueError): # Python 2
 
@@ -52,11 +53,12 @@ except (ValueError): # Python 2
 
     # Import the helper functions and regex helpers
     from features.haxe_helper import runcmd, show_quick_panel, cache
-    from features.haxe_helper import spaceChars, wordChars, importLine, packageLine, compilerOutput
+    from features.haxe_helper import spaceChars, wordChars, importLine, packageLine
     from features.haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
     from features.haxe_helper import libFlag, skippable, inAnonymous, extractTag
     from features.haxe_helper import variables, functions, functionParams, paramDefault
     from features.haxe_helper import isType, comments, haxeVersion, haxeFileRegex, controlStruct
+    from features.haxe_errors import highlight_errors, extract_errors
 
 # For running background tasks
 
@@ -395,7 +397,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
     currentBuild = None
     selectingBuild = False
     builds = []
-    errors = []
     haxe_settings_file = 'Preferences.sublime-settings'
 
     currentCompletion = {
@@ -490,52 +491,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
         packs.sort()
         return classes, packs
 
-
-    def highlight_errors( self , view , duration=0 ) :
-        fn = view.file_name()
-        line_regions = []
-        char_regions = []
-
-        if fn is None :
-            return
-
-        for e in self.errors :
-            if e and os.path.samefile(e["file"], fn) :
-                metric = e["metric"]
-                l = e["line"]
-                left = e["from"]
-                right = e["to"]
-
-                if metric.startswith("character") :
-                    # retrieve character positions from utf-8 bytes offset reported by compiler
-                    try:
-                        line = view.substr(view.line(view.text_point(l, 0))).encode("utf-8")
-                        left = len(line[:left].decode("utf-8"))
-                        right = len(line[:right].decode("utf-8"))
-
-                        a = view.text_point(l,left)
-                        b = view.text_point(l,right)
-                        char_regions.append( sublime.Region(a,b))
-                    except:
-                        pass
-                else :
-                    a = view.text_point(left,0)
-                    b = view.text_point(right,0)
-                    line_regions.append( sublime.Region(a,b))
-
-                view.set_status("haxe-status" , "Error: " + e["message"] )
-
-                if duration > 0:
-                    # show once
-                    e.clear()
-
-        if duration > 0:
-            sublime.set_timeout(
-                lambda: self.highlight_errors(view), duration)
-
-        view.add_regions("haxe-error-lines" , line_regions , "invalid" , "light_x_bright" , sublime.DRAW_OUTLINED )
-        view.add_regions("haxe-error" , char_regions , "invalid" , "light_x_bright" , sublime.DRAW_OUTLINED )
-
     def on_post_save( self , view ) :
         if view.score_selector(0,'source.hxml') > 0:
             self.clear_build(view)
@@ -561,7 +516,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         self.extract_build_args( view )
         self.get_build( view )
         self.generate_build( view )
-        self.highlight_errors( view )
+        highlight_errors( view )
 
     def on_pre_save( self , view ) :
         if view.score_selector(0,'source.haxe.2') == 0 :
@@ -1553,7 +1508,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
             return
 
         comps = []
-        self.errors = []
         args = []
 
 
@@ -1815,8 +1769,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 else :
                     status = ""
 
-            self.errors = self.extract_errors( err, cwd )
-            self.highlight_errors( view, 5000 )
+            extract_errors( err, cwd )
+            highlight_errors( view, 5000 )
 
         # print(comps)
         if mode == "type":
@@ -1826,50 +1780,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
             return pos
 
         return ( err, comps, status , hints )
-
-    def extract_errors( self , str , cwd ):
-        errors = []
-
-        for infos in compilerOutput.findall(str) :
-            infos = list(infos)
-            #print(infos)
-            f = infos.pop(0)
-
-            if not os.path.isabs(f):
-                f = os.path.join(cwd, f)
-            f = os.path.normpath(f)
-
-            l = int( infos.pop(0) )-1
-
-            metric = infos.pop(0)
-
-            left = int( infos.pop(0) )
-            right = infos.pop(0)
-            if right != "" :
-                right = int( right )
-            else :
-                right = left+1
-
-            m = infos.pop(0)
-
-            if metric == "lines" :
-                left -= 1
-
-            errors.append({
-                "file" : f,
-                "line" : l,
-                "metric" : metric,
-                "from" : left,
-                "to" : right,
-                "message" : m
-            })
-
-        #print(errors)
-        if len(errors) > 0:
-            sublime.status_message(errors[0]["message"])
-
-        return errors
-
 
     def on_query_completions(self, view, prefix, locations):
         scope = view.scope_name(locations[0])
@@ -2189,8 +2099,9 @@ class HaxeExecCommand(ExecCommand):
         super(HaxeExecCommand, self).finish(*args, **kwargs)
         outp = self.output_view.substr(sublime.Region(0, self.output_view.size()))
         hc = HaxeComplete.inst
-        hc.errors = hc.extract_errors( outp, self.output_view.settings().get("result_base_dir") )
-        hc.highlight_errors( self.window.active_view() )
+        extract_errors(
+            outp, self.output_view.settings().get("result_base_dir") )
+        highlight_errors( self.window.active_view() )
 
     def run(self, cmd = [],  shell_cmd = None, file_regex = "", line_regex = "", working_dir = "",
             encoding = None, env = {}, quiet = False, kill = False,

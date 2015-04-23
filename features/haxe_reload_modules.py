@@ -16,8 +16,10 @@ if int(sublime.version()) >= 3000:
 submods = [
     '',
     '.haxe_helper',
+    '.haxe_errors',
     '.haxe_generate_code_helper',
-    '.haxe_format'
+    '.haxe_format',
+    '.haxe_hint',
     '.haxe_organize_imports',
     '.haxe_generate_field',
     '.haxe_restart_server',
