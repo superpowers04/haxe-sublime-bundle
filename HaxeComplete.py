@@ -671,6 +671,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             currentBuild.hxml = build
             currentBuild.yaml = build
             currentBuild.cwd = os.path.dirname( build )
+            currentBuild.output = "Flambe"
 
             self.add_build( currentBuild )
 
