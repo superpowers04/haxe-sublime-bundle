@@ -159,6 +159,10 @@
 			<array>
 				<dict>
 					<key>include</key>
+					<string>#regex</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#arrays</string>
 				</dict>
 				<dict>
@@ -216,10 +220,6 @@
 				<dict>
 					<key>include</key>
 					<string>#punctuation-brackets</string>
-				</dict>
-				<dict>
-					<key>include</key>
-					<string>#regex</string>
 				</dict>
 				<dict>
 					<key>include</key>
@@ -900,13 +900,40 @@
 		</dict>
 		<key>regex</key>
 		<dict>
+			<key>begin</key>
+			<string>~/</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>string.regexp.begin.haxe.2</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>(/[gimsu]*)|(\n$)</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>string.regexp.end.haxe.2</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>invalid.illegal.haxe.2</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>string.regexp.haxe.2</string>
 			<key>patterns</key>
 			<array>
 				<dict>
 					<key>match</key>
-					<string>~/((?:\\/|[^/])+)/</string>
+					<string>\\.</string>
 					<key>name</key>
-					<string>string.regexp.haxe.2</string>
+					<string>constant.character.escape.haxe.2</string>
 				</dict>
 			</array>
 		</dict>
