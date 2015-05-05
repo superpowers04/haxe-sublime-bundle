@@ -580,6 +580,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
     def find_nmml( self, folder ) :
         nmmls = glob.glob( os.path.join( folder , "*.nmml" ) )
         nmmls += glob.glob( os.path.join( folder , "*.xml" ) )
+        nmmls += glob.glob( os.path.join( folder , "*.hxp" ) )
         nmmls += glob.glob( os.path.join( folder , "*.lime" ) )
 
         for build in nmmls:
@@ -607,12 +608,16 @@ class HaxeComplete( sublime_plugin.EventListener ):
             self.build_cache[build] = BuildCache(build, raw, currentBuild, None)
 
             outp = "NME"
+            is_hxp = build.endswith("hxp")
+            if is_hxp:
+                currentBuild.main = 'hxp'
+                outp = 'Lime/OpenFl'
+                currentBuild.lime = True
+
             lines = raw.splitlines()
             for l in lines:
-            # while 1:
-                # l = f.readline()
-                # if not l :
-                #     break;
+                if is_hxp:
+                    continue
                 m = extractTag.search(l)
                 if not m is None:
                     #print(m.groups())
