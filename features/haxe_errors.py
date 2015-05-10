@@ -1,6 +1,7 @@
 import os
 import re
 import sublime
+import traceback
 
 errors = []
 re_compiler_output = re.compile(
@@ -82,7 +83,7 @@ def highlight_errors(view, duration=0):
                     b = view.text_point(l, right)
                     char_regions.append(sublime.Region(a, b))
                 except:
-                    pass
+                    print(traceback.print_exc())
             else:
                 a = view.text_point(left, 0)
                 b = view.text_point(right, 0)
