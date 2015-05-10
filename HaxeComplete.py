@@ -349,11 +349,13 @@ class HaxeDisplayCompletion( sublime_plugin.TextCommand ):
         #print("completing")
         view = self.view
 
+        HaxeComplete.inst.force_display_completion = True
         view.run_command( "auto_complete" , {
             "api_completions_only" : True,
             "disable_auto_insert" : True,
             "next_completion_if_showing" : False
         } )
+        HaxeComplete.inst.force_display_completion = False
 
 
 class HaxeInsertCompletion( sublime_plugin.TextCommand ):
@@ -427,6 +429,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         #print("init haxecomplete")
         HaxeComplete.inst = self
         self.build_cache = {}
+        self.force_display_completion = False
 
     def __del__(self) :
         self.stop_server()
@@ -1792,6 +1795,10 @@ class HaxeComplete( sublime_plugin.EventListener ):
         is_haxe = 'source.haxe.2' in scope
         is_hxml = 'source.hxml' in scope
         comps = []
+
+        if not self.force_display_completion and \
+                not view.settings().get('haxe_auto_complete', True):
+            return comps
 
         if not is_haxe and not is_hxml:
             return comps
