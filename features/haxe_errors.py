@@ -64,7 +64,10 @@ def highlight_errors(view, duration=0):
         return
 
     for e in errors:
-        if e and os.stat(e["file"]) == os.stat(fn):
+        if e and \
+                os.path.exists(e["file"]) and \
+                os.path.exists(fn) and \
+                os.stat(e["file"]) == os.stat(fn):
             metric = e["metric"]
             l = e["line"]
             left = e["from"]
