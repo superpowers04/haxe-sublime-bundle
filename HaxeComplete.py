@@ -1837,13 +1837,15 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         if os.path.exists( fn ):
             if os.path.exists( temp ):
-                os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
+                if os.stat( temp ).st_mode & stat.S_IWRITE == 0:
+                    os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
                 shutil.copy2( temp , fn )
                 os.remove( temp )
             # copy saved file to temp for future restoring
             shutil.copy2( fn , temp )
 
-        os.chmod( fn , os.stat( fn ).st_mode | stat.S_IWRITE )
+        if os.stat( fn ).st_mode & stat.S_IWRITE == 0:
+            os.chmod( fn , os.stat( fn ).st_mode | stat.S_IWRITE )
         # write current source to file
         f = codecs.open( fn , "wb" , "utf-8" , "ignore" )
         f.write( src )
@@ -1855,7 +1857,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
         fn = view.file_name()
 
         if os.path.exists( temp ) :
-            os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
+            if os.stat( temp ).st_mode & stat.S_IWRITE == 0:
+                os.chmod( temp , os.stat( temp ).st_mode | stat.S_IWRITE )
 
             shutil.copy2( temp , fn )
             # os.chmod( temp, stat.S_IWRITE )
