@@ -86,10 +86,23 @@ class HaxeCreateType( sublime_plugin.WindowCommand ):
 
         HaxeCreateType.currentFile = fn
         t = HaxeCreateType.currentType
-        src = "\npackage " + ".".join(pack) + ";\n\n"+t+" "+cl+" "
+
+        settings = self.window.active_view().settings()
+        src = '\n' * settings.get("haxe_bl_file_top", 0)
+        if pack:
+            src += "package %s;\n" % ".".join(pack)
+        else:
+            src += "package;\n"
+        src += '\n' * settings.get("haxe_bl_group", 1)
+        src += "%s %s" % (t, cl)
         if t == "typedef" :
-            src += "= "
-        src += "\n{\n\n\t$1\n\n}"
+            src += "$HX_W_A=$HX_W_OCB"
+        elif t == "abstract" :
+            src += "$HX_W_ORB($HX_ORB_W${1:Int}$HX_W_CRB)$HX_W_OCB"
+        else:
+            src += "$HX_W_OCB"
+        src += "{\n\t$0\n}"
+
         HaxeCreateType.currentSrc = src
 
         v = sublime.active_window().open_file( fn )

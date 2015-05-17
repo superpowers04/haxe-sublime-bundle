@@ -68,6 +68,7 @@
 	/*
 		Blank lines
 	*/
+	"haxe_bl_file_top": 0,
 	"haxe_bl_top": 0,
 	"haxe_bl_property": 0,
 	"haxe_bl_group": 1,

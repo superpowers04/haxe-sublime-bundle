@@ -1,4 +1,5 @@
 [
+    { "caption": "Haxe: New Abstract", "command": "haxe_create_type" , "args" : { "t" : "abstract"} },
     { "caption": "Haxe: New Class", "command": "haxe_create_type" , "args" : { "t" : "class"} },
     { "caption": "Haxe: New Interface", "command": "haxe_create_type" , "args" : { "t" : "interface"} },
     { "caption": "Haxe: New Enum", "command": "haxe_create_type" , "args" : { "t" : "enum"} },

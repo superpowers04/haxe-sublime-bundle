@@ -118,7 +118,7 @@ def find_regions(view, selector, in_region=None, incl_string=False):
 
 def get_blank_lines(view, name, default=0):
     n = view.settings().get(name, default)
-    return ''.join(['\n' for i in range(0, n)])
+    return '\n' * n
 
 
 def get_context(view):

@@ -180,6 +180,11 @@
         ]
     },
     {
+        "keys": ["ctrl+shift+h","ctrl+shift+a"],
+        "command": "haxe_create_type",
+        "args" : {"t" : "abstract"}
+    },
+    {
         "keys": ["ctrl+shift+h","ctrl+shift+c"],
         "command": "haxe_create_type",
         "args" : {"t" : "class"}
