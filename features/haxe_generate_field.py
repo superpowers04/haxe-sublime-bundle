@@ -262,8 +262,9 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         if SCOPE_PARAMETERS in self.context.scope and \
                 self.caret_name:
             param_type = self.get_param_type()
-            tp = param_type[0].split(':')[1]
-            types = [r.strip() for r in tp.split('->')]
+            if param_type:
+                tp = param_type[0].split(':')[1]
+                types = [r.strip() for r in tp.split('->')]
 
         if 'var' in self.field:
             text = '%svar %s:%s$0;'
