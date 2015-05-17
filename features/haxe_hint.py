@@ -2,6 +2,7 @@ import re
 import os
 import sublime
 import sublime_plugin
+import traceback
 
 if int(sublime.version()) >= 3000:
     from plistlib import readPlistFromBytes
@@ -21,7 +22,14 @@ re_punc = re.compile(r'([,\(\):])')
 
 class HaxeColorScheme(sublime_plugin.EventListener):
 
+    inst = None
+
     def __init__(self):
+        HaxeColorScheme.inst = self
+        self.color_scheme = None
+        self.styles = None
+        self.color_map = None
+        self.settings = None
         self.init()
 
     def init(self):
@@ -30,40 +38,52 @@ class HaxeColorScheme(sublime_plugin.EventListener):
             sublime.set_timeout(self.init, 200)
             return
 
-        self.settings = sublime.load_settings('Preferences.sublime-settings')
-        self.settings.add_on_change(
-            'color_scheme', lambda: self.parse_scheme())
         self.parse_scheme()
 
-    @staticmethod
-    def get_color(name):
-        if HaxeColorScheme.color_map is None or \
-                name not in HaxeColorScheme.color_map:
+    def get_color(self, name):
+        if self.color_map is None or name not in self.color_map:
             return None
-        return HaxeColorScheme.color_map[name]
+        return self.color_map[name]
 
-    @staticmethod
-    def get_styles():
-        if HaxeColorScheme.styles is None:
-            if HaxeColorScheme.color_map is None:
+    def get_styles(self):
+        self.parse_scheme()
+
+        if self.styles is None:
+            if self.color_map is None:
                 return ''
 
             colors = (
-                HaxeColorScheme.get_color('popupBackground') or
-                HaxeColorScheme.get_color('lineHighlight') or
-                HaxeColorScheme.get_color('background'),
-                HaxeColorScheme.get_color('popupForeground') or
-                HaxeColorScheme.get_color('foreground'))
-            HaxeColorScheme.styles = \
+                self.get_color('popupBackground') or
+                self.get_color('lineHighlight') or
+                self.get_color('background'),
+                self.get_color('popupForeground') or
+                self.get_color('foreground'))
+            self.styles = \
                 '<style>html{background-color:%s;color:%s;}</style>' % colors
 
-        return HaxeColorScheme.styles
+        return self.styles
 
     def parse_scheme(self):
-        HaxeColorScheme.styles = None
-        HaxeColorScheme.color_map = None
+        if sublime is None or \
+                sublime.active_window() is None or \
+                sublime.active_window().active_view() is None:
+            return
 
-        color_scheme = self.settings.get('color_scheme')
+        if self.settings is None:
+            self.settings = sublime.load_settings(
+                'Preferences.sublime-settings')
+            self.settings.add_on_change(
+                'color_scheme', lambda: self.parse_scheme())
+
+        color_scheme = self.settings.get(
+            'color_scheme', 'Packages/Color Scheme - Default/Monokai.tmTheme')
+
+        if self.color_scheme == color_scheme and self.color_map is not None:
+            return
+
+        self.color_scheme = color_scheme
+        self.styles = None
+        self.color_map = None
 
         try:
             if int(sublime.version()) >= 3000:
@@ -73,6 +93,7 @@ class HaxeColorScheme(sublime_plugin.EventListener):
                 pl = readPlist(os.path.join(os.path.abspath(
                     sublime.packages_path() + '/..'), color_scheme))
         except:
+            print(traceback.print_exc())
             return
 
         def safe_update(fr, to):
@@ -93,7 +114,7 @@ class HaxeColorScheme(sublime_plugin.EventListener):
                 if 'text' in scopes or 'source' in scopes:
                     dct.update(d.settings)
 
-        HaxeColorScheme.color_map = dct
+        self.color_map = dct
 
 
 class HaxeShowPopup(sublime_plugin.TextCommand):
@@ -106,8 +127,7 @@ class HaxeShowPopup(sublime_plugin.TextCommand):
         text = re_punc.sub(r'<b>\1</b>', text)
 
         view.show_popup(
-            HaxeColorScheme.get_styles() + text,
-            max_width=700)
+            HaxeColorScheme.inst.get_styles() + text, max_width=700)
 
 
 class HaxeHint(sublime_plugin.TextCommand):
