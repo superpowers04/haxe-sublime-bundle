@@ -207,7 +207,7 @@
     {
         "keys": ["ctrl+shift+h","ctrl+shift+o"],
         "command": "haxe_organize_imports",
-        "args" : {"add" : true, "sort" : true, "remove" : true, "auto_remove" : false}
+        "args" : {"add" : true, "sort" : true, "remove" : true, "auto_remove" : true}
     },
     {
         "keys": ["ctrl+shift+h","ctrl+shift+p"],

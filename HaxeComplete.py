@@ -240,6 +240,8 @@ class HaxeBuild :
         self.libs = []
         self.classes = None
         self.packages = None
+        self.libClasses = None
+        self.libPacks = None
         self.openfl = False
         self.lime = False
         self.cwd = None
@@ -311,33 +313,44 @@ class HaxeBuild :
         return not os.path.exists( self.hxml )
 
     def get_types( self ) :
-        if self.classes is None or self.packs is None :
+        cwd = self.cwd
+        if cwd is None :
+            cwd = os.path.dirname( self.hxml )
+
+        if self.libClasses is None or self.libPacks is None :
             classes = []
             packs = []
-
             cp = []
-            cp.extend( self.classpaths )
 
             for lib in self.libs :
                 if lib is not None :
                     cp.append( lib.path )
-
-            #print("extract types :")
-            #print(cp)
-            cwd = self.cwd
-            if cwd is None :
-                cwd = os.path.dirname( self.hxml )
 
             for path in cp :
                 c, p = HaxeComplete.inst.extract_types( os.path.join( cwd , path ) )
                 classes.extend( c )
                 packs.extend( p )
 
-            classes.sort()
-            packs.sort()
+            self.libClasses = classes;
+            self.libPacks = packs;
 
-            self.classes = classes;
-            self.packs = packs;
+        classes = []
+        packs = []
+        cp = self.classpaths
+
+        for path in cp :
+            c, p = HaxeComplete.inst.extract_types( os.path.join( cwd , path ) )
+            classes.extend( c )
+            packs.extend( p )
+
+        classes.extend(self.libClasses)
+        packs.extend(self.libPacks)
+
+        classes.sort()
+        packs.sort()
+
+        self.classes = classes;
+        self.packs = packs;
 
         return self.classes, self.packs
 
@@ -1454,17 +1467,13 @@ class HaxeComplete( sublime_plugin.EventListener ):
         #self.stop_server()
         if self.serverMode and self.serverProc is None :
             try:
-                haxepath = "haxe"
-
                 env = os.environ.copy()
-
                 merged_env = env.copy()
 
                 if view is not None :
                     user_env = view.settings().get('build_env')
                     if user_env:
                         merged_env.update(user_env)
-
 
                 if view is not None :
                     settings = view.settings()

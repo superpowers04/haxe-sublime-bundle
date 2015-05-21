@@ -14,7 +14,7 @@ except (ValueError):  # Python 2
     from haxe_generate_code_helper import count_blank_lines, get_blank_lines
 
 
-re_type = re.compile(r'[\w.]*[A-Z]\w*')
+re_type = re.compile(r'\b(\w+\.)*[A-Z]\w*\b')
 re_word = re.compile(r'\b[_a-zA-Z]\w*\b')
 re_string = re.compile(r'(["\'])(?:\\\\|\\\1|.)*?\1', re.M | re.S)
 re_conditions = re.compile(r'[ \t]*#(if|elseif|else|end)', re.M)
@@ -124,6 +124,8 @@ def get_used_typename_map(src):
                 dct[tp] = True
         else:
             words = tp.split('.')
+            if not is_type(words[0]):
+                continue
             for word in words:
                 if is_type(word):
                     dct[word] = True
@@ -329,10 +331,13 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
         sublime.set_timeout(lambda: self.complete_command(), 10)
 
     def complete_command(self):
+        removed_imports = []
         if self.imp_to_remove_map:
             for imp in self.imp_to_remove_map:
                 if not self.remove or not self.imp_to_remove_map[imp]:
                     self.imps_to_add.append(imp)
+                else:
+                    removed_imports.append(imp)
 
         if self.sort:
             self.imps_to_add.sort()
@@ -341,6 +346,21 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
             sublime.status_message('Allready organized')
             self.clean()
             return
+        else:
+            status = []
+            n = len(self.missing_imps)
+            if n == 1:
+                status.append('Added %s' % self.missing_imps[0])
+            elif n > 1:
+                status.append('Added %d imports' % n)
+
+            n = len(removed_imports)
+            if n == 1:
+                status.append('Removed %s' % removed_imports[0])
+            elif n > 1:
+                status.append('Removed %d imports' % n)
+
+            sublime.status_message('; '.join(status))
 
         self.window.run_command('haxe_organize_imports_edit')
 
@@ -430,7 +450,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
             return
 
         impname = self.missing_impnames_to_prompt.pop()
-        self.imps_to_add.append(
+        self.missing_imps.append(
             get_full_imp(
                 HaxeOrganizeImports.build_type_map[impname][index],
                 impname))
@@ -520,7 +540,7 @@ class HaxeOrganizeImports(sublime_plugin.WindowCommand):
 
         self.imps_to_add = used_imps
 
-    def run(self, add=True, sort=True, remove=True, auto_remove=False):
+    def run(self, add=True, sort=True, remove=True, auto_remove=True):
         view = self.window.active_view()
         if view is None or not is_haxe_scope(view):
             return
