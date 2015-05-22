@@ -1853,8 +1853,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
             # copy saved file to temp for future restoring
             shutil.copy2( fn , temp )
 
-        if os.stat( fn ).st_mode & stat.S_IWRITE == 0:
-            os.chmod( fn , os.stat( fn ).st_mode | stat.S_IWRITE )
+            if os.stat( fn ).st_mode & stat.S_IWRITE == 0:
+                os.chmod( fn , os.stat( fn ).st_mode | stat.S_IWRITE )
         # write current source to file
         f = codecs.open( fn , "wb" , "utf-8" , "ignore" )
         f.write( src )
