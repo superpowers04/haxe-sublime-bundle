@@ -193,7 +193,8 @@ class HaxeHint(sublime_plugin.TextCommand):
             return
 
         for r in view.sel():
-            comps, hints = complete.get_haxe_completions(view, r.end())
+            comps, hints = complete.get_haxe_completions(
+                view, r.end(), ignoreTopLevel=True)
 
             if haxe_use_popup:
                 self.show_popup(hints)

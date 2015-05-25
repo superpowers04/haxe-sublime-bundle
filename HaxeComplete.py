@@ -1891,7 +1891,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         return fn_name
 
 
-    def get_haxe_completions( self , view , offset ):
+    def get_haxe_completions( self , view , offset , ignoreTopLevel=False ):
         # print("OFFSET");
         # print(offset);
         src = view.substr(sublime.Region(0, view.size()))
@@ -1959,7 +1959,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             else :
                 completeOffset = max( prevDot + 1, prevPar + 1 , prevColon + 1 )
                 skipped = src[completeOffset:offset]
-                toplevelComplete = skippable.search( skipped ) is None and inAnonymous.search( skipped ) is None
+                toplevelComplete = (skipped == '' or skippable.search( skipped ) is None) and inAnonymous.search( skipped ) is None
 
         completeChar = src[completeOffset-1]
         userChar = src[userOffset-1]
@@ -1967,6 +1967,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
         inControlStruct = controlStruct.search( src[0:completeOffset] ) is not None
 
         toplevelComplete = toplevelComplete or ( completeChar in ":(," and userChar not in ":(," ) or inControlStruct
+        if ignoreTopLevel:
+            toplevelComplete = False
 
         mode = None
 
