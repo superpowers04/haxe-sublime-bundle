@@ -93,6 +93,34 @@ except ImportError as e :
     unicode = str #dirty...
 
 
+def parse_sig(sig):
+    params = []
+    spl = sig.split(" -> ")
+    pars = 0;
+    currentType = [];
+
+    for t in spl :
+        currentType.append( t )
+        if "(" in t or "{" in t or "<" in t :
+            pars += 1
+        if ")" in t or "}" in t or ">" in t :
+            pars -= 1
+
+        if pars == 0 :
+            params.append(
+                " -> ".join(currentType).replace('(', '').replace(')', ''))
+            currentType = []
+
+    ret = params.pop()
+
+    if not params:
+        params = None
+    elif len(params) == 1 and params[0] == "Void" :
+        params = []
+
+    return params, ret
+
+
 class HaxeLib :
 
     available = {}
@@ -1073,7 +1101,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
     def run_build( self , view ) :
 
-        err, comps, status = self.run_haxe( view )
+        err, comps, status, _, _ = self.run_haxe( view )
         view.set_status( "haxe-status" , status )
 
 
@@ -1615,6 +1643,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         #print(err)
         hints = []
+        fields = []
         msg = ""
         tree = None
         pos = None
@@ -1640,29 +1669,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if tree is not None :
             for i in tree.getiterator("type") :
                 hint = i.text.strip()
-
-                spl = hint.split(" -> ")
-
-                types = [];
-                pars = 0;
-                currentType = [];
-
-                for t in spl :
-                    currentType.append( t )
-                    if "(" in t or "{" in t or "<" in t :
-                        pars += 1
-                    if ")" in t or "}" in t or ">" in t :
-                        pars -= 1
-
-                    if pars == 0 :
-                        types.append( " -> ".join( currentType ) )
-                        currentType = []
-
-                for i in range(0, len(types)):
-                    types[i] = types[i].replace('(', '')
-                    types[i] = types[i].replace(')', '')
-
-                ret = types.pop()
+                types, ret = parse_sig(hint)
 
                 if mode == "type":
                     hint = ret
@@ -1733,25 +1740,17 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
                     if sig is not None :
 
-                        types = sig.split(" -> ")
-                        ret = types.pop()
+                        params, ret = parse_sig(sig)
+                        fields.append((name, params, ret))
 
-                        if( len(types) > 0 ) :
-                            #cm = name + "("
+                        if params is not None :
                             cm = name
-                            if len(types) == 1 and types[0] == "Void" :
-                                types = []
-                                #cm += ")"
-                                hint = name + "()\t"+ ret
-                                insert = cm
-                                doc_data['hint'] = hint
-                            else:
-                                hint = name + "( " + " , ".join( types ) + " )\t" + ret
-                                doc_data['hint'] = hint # update before compacting
+                            hint = name + "( " + " , ".join( params ) + " )\t" + ret
+                            doc_data['hint'] = hint # update before compacting
 
-                                if len(hint) > 40: # compact arguments
-                                    hint = compactFunc.sub("(...)", hint);
-                                insert = cm
+                            if len(hint) > 40: # compact arguments
+                                hint = compactFunc.sub("(...)", hint);
+                            insert = cm
                         else :
                             hint = name + "\t" + ret
                             doc_data['hint'] = hint
@@ -1797,7 +1796,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if mode == "position":
             return pos
 
-        return ( err, comps, status , hints )
+        return ( err, comps, status, hints, fields )
 
     def on_query_completions(self, view, prefix, locations):
         scope = view.scope_name(locations[0])
@@ -1989,7 +1988,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
             temp = self.save_temp_file( view )
-            ret , haxeComps , status , hints = self.run_haxe( view , { "filename" : fn , "offset" : byte_offset , "commas" : commas , "mode" : mode })
+            ret , haxeComps , status , hints , _ = self.run_haxe( view , { "filename" : fn , "offset" : byte_offset , "commas" : commas , "mode" : mode })
 
             self.clear_temp_file( view , temp )
 

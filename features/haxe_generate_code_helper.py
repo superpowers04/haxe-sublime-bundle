@@ -171,6 +171,39 @@ def get_mods(view, private=True, o=False, p=True, i=False, s=True):
     return mods.strip()
 
 
+def get_editable_mods(
+        view, idx,
+        private=True, o=False, p=True, i=False, s=True,
+        eo=False, ep=False, ei=False, es=False):
+    mods = []
+    mod_map = {}
+    edit_map = {}
+
+    order = get_mod_order(view)
+
+    def add_mod(use, key, value, editable):
+        edit_map[key] = editable
+        if use:
+            mod_map[key] = value
+
+    add_mod(o, 'o', 'override', eo)
+    add_mod(p, 'p', 'private' if private else 'public', ep)
+    add_mod(i, 'i', 'inline', ei)
+    add_mod(s, 's', 'static', es)
+
+    for c in order:
+        if c not in mod_map:
+            continue
+        mod = mod_map[c] + ' '
+        if edit_map[c]:
+            mod = '${%d:%s }' % (idx, mod_map[c])
+            idx += 1
+        mods.append(mod)
+        del mod_map[c]
+
+    return ''.join(mods).strip()
+
+
 def is_haxe_scope(view):
     return view.score_selector(0, "source.haxe.2") > 0
 
@@ -184,8 +217,10 @@ def set_pos(view, pos, center=True):
 
 CtxVar = namedtuple('CtxVar', ['group', 'name', 'region'])
 CtxMethod = namedtuple('CtxMethod', ['group', 'name', 'region', 'block'])
-CtxType = namedtuple('CtxType', ['group', 'name', 'region', 'block',
-    'vars', 'svars', 'methods', 'smethods', 'field_map'])
+CtxType = namedtuple(
+    'CtxType',
+    ['group', 'name', 'region', 'block',
+        'vars', 'svars', 'methods', 'smethods', 'field_map'])
 CtxWord = namedtuple('CtxWord', ['name', 'region'])
 
 
@@ -200,6 +235,7 @@ class HaxeContext(object):
         self._var = None
         self._method = None
         self._word = None
+        self._src = None
 
     def get_method(self):
         if self._method is None:
@@ -217,6 +253,12 @@ class HaxeContext(object):
                 find_regions(self.view, SCOPE_FUNC_BLOCK, rgn)[0])
 
         return self._method
+
+    def get_src(self):
+        if self._src is None:
+            self._src = self.view.substr(sublime.Region(0, self.view.size()))
+
+        return self._src
 
     def get_type(self):
         if self._type is None:
@@ -343,3 +385,4 @@ class HaxeContext(object):
     type = property(get_type)
     var = property(get_var)
     word = property(get_word)
+    src = property(get_src)

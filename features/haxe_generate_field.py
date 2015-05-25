@@ -351,7 +351,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
         return cmds
 
-    def run(self, name=None, field=FIELD_VAR, text=None):
+    def run(self, name=None, field=FIELD_VAR, text=None, move=False):
         win = self.window
         view = win.active_view()
 
@@ -364,7 +364,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         self.field = field
         self.static = 'static' in field
         self.text = text
-        self.move_caret = text is None
+        self.move_caret = text is None or move
 
         if not self.context.type:
             return

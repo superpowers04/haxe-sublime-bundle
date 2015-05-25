@@ -2,31 +2,17 @@ import sublime
 import sublime_plugin
 
 try:  # Python 3
-    from .haxe_extract_var import *
-    from .haxe_generate_prop import *
-    from .haxe_implement_interface import *
-    from .haxe_override_method import *
-    from .haxe_generate_field import *
-    from .haxe_generate_code_helper import *
+    from .haxe_generate_code_helper import is_haxe_scope, get_context
+    from .haxe_fix_module import HaxeFixModule
 except (ValueError):  # Python 2
-    from haxe_extract_var import *
-    from haxe_generate_prop import *
-    from haxe_implement_interface import *
-    from haxe_override_method import *
-    from haxe_generate_field import *
-    from haxe_generate_code_helper import *
+    from haxe_generate_code_helper import is_haxe_scope, get_context
+    from haxe_fix_module import HaxeFixModule
 
 
-class HaxeGenerateCode(sublime_plugin.WindowCommand):
+class HaxeRefactoring(sublime_plugin.WindowCommand):
 
     modules = [
-        HaxeExtractVar,
-        HaxeOverrideMethod,
-        HaxeGeneratePropVar,
-        HaxeConvertToProp,
-        HaxeGenerateGetSet,
-        HaxeImplementInterface,
-        HaxeGenerateField
+        HaxeFixModule
     ]
 
     def complete(self):
@@ -54,7 +40,7 @@ class HaxeGenerateCode(sublime_plugin.WindowCommand):
         self.context = get_context(view)
 
         self.cmds = []
-        for gen in HaxeGenerateCode.modules:
+        for gen in HaxeRefactoring.modules:
             self.cmds.extend(gen.poll(self.context))
 
         items = []

@@ -14,9 +14,12 @@ from .haxe_generate_prop import HaxeGenerateGetSet, HaxeConvertToProp, HaxeGener
 from .haxe_extract_var import HaxeExtractVar
 from .haxe_hint import HaxeHint, HaxeShowPopup, HaxeColorScheme
 from .haxe_implement_interface import HaxeImplementInterface
+from .haxe_override_method import HaxeOverrideMethod, HaxeOverrideMethodEdit
 from .haxe_organize_imports import HaxeOrganizeImports, HaxeOrganizeImportsEdit
 from .haxe_reload_modules import reload_modules
 from .haxe_format import HaxeFormat
+from .haxe_refactoring import HaxeRefactoring
+from .haxe_fix_module import HaxeFixModule
 from .haxe_helper import *
 from .haxe_errors import *
 
