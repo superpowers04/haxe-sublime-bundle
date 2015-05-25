@@ -1101,7 +1101,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
     def run_build( self , view ) :
 
-        err, comps, status, _, _ = self.run_haxe( view )
+        err, comps, status = self.run_haxe( view )
         view.set_status( "haxe-status" , status )
 
 
