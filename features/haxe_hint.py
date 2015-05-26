@@ -154,6 +154,11 @@ class HaxeHint(sublime_plugin.TextCommand):
         complete = HaxeComplete_inst()
         view = self.view
 
+        if not input:
+            if view.substr(view.sel()[0].end()) == '(':
+                view.run_command('haxe_show_type')
+                return
+
         if input == '(':
             sel = view.sel()
             emptySel = True
