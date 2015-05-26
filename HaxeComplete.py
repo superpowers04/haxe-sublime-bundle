@@ -399,6 +399,22 @@ class HaxeDisplayCompletion( sublime_plugin.TextCommand ):
         HaxeComplete.inst.force_display_completion = False
 
 
+class HaxeDisplayTypeCompletion( sublime_plugin.TextCommand ):
+
+    def run( self , edit ) :
+        view = self.view
+
+        HaxeComplete.inst.force_display_completion = True
+        HaxeComplete.inst.type_completion_only = True
+        view.run_command( "auto_complete" , {
+            "api_completions_only" : True,
+            "disable_auto_insert" : True,
+            "next_completion_if_showing" : False
+        } )
+        HaxeComplete.inst.force_display_completion = False
+        HaxeComplete.inst.type_completion_only = False
+
+
 class HaxeInsertCompletion( sublime_plugin.TextCommand ):
 
     def run( self , edit ) :
@@ -471,6 +487,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         HaxeComplete.inst = self
         self.build_cache = {}
         self.force_display_completion = False
+        self.type_completion_only = False
 
     def __del__(self) :
         self.stop_server()
@@ -1248,6 +1265,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 if cm not in comps:
                     comps.append( cm )
 
+        if self.type_completion_only:
+            comps = []
+
         for c in cl :
             #print(c)
             spl = c.split(".")
@@ -1282,11 +1302,11 @@ class HaxeComplete( sublime_plugin.EventListener ):
             if cm not in comps and tarPkg is None or (top not in targetPackages) or (top == tarPkg) : #( build.target is None or (top not in HaxeBuild.targets) or (top == build.target) ) :
                 comps.append( cm )
 
-        for p in packs :
-            cm = (p + "\tpackage",p)
-            if cm not in comps :
-                comps.append(cm)
-
+        if not self.type_completion_only:
+            for p in packs :
+                cm = (p + "\tpackage",p)
+                if cm not in comps :
+                    comps.append(cm)
 
         return comps
 
@@ -1985,19 +2005,27 @@ class HaxeComplete( sublime_plugin.EventListener ):
         #if toplevelComplete and (inControlStruct or completeChar not in "(,") :
         #    return comps,hints
 
-        inp = (fn,offset,commas,src[0:offset-1],mode)
-        if self.currentCompletion["inp"] is None or inp != self.currentCompletion["inp"] :
+        inp = (fn,offset,commas,src[0:offset-1],mode,self.type_completion_only)
+        if (self.currentCompletion["inp"] is None or
+                inp != self.currentCompletion["inp"]) :
+            ret = ''
+            status = ''
+            hints = []
+            haxeComps = []
 
-            byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
-            temp = self.save_temp_file( view )
-            ret , haxeComps , status , hints , _ = self.run_haxe( view , { "filename" : fn , "offset" : byte_offset , "commas" : commas , "mode" : mode })
+            if not self.type_completion_only:
+                temp = self.save_temp_file( view )
+                byte_offset = len(codecs.encode(src[0:offset], "utf-8"))
+                ret , haxeComps , status , hints , _ = self.run_haxe( view , { "filename" : fn , "offset" : byte_offset , "commas" : commas , "mode" : mode })
+                self.clear_temp_file( view , temp )
 
-            self.clear_temp_file( view , temp )
+            if (toplevelComplete and len(haxeComps) == 0 or
+                    self.type_completion_only):
+                haxeComps = self.get_toplevel_completion(
+                    src , src_dir , self.get_build( view ) )
 
-            if toplevelComplete and len(haxeComps) == 0 :
-                haxeComps = self.get_toplevel_completion( src , src_dir , self.get_build( view ) )
-
-            if toplevelComplete or completeChar not in "(," :
+            if (toplevelComplete or completeChar not in "(," or
+                    self.type_completion_only):
                 comps = haxeComps
 
             self.currentCompletion["outp"] = (ret,comps,status,hints)

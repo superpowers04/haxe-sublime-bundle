@@ -34,6 +34,40 @@
         ]
     },
     {
+        "keys": ["ctrl+alt+space"], 
+        "command": "hide_auto_complete", 
+        "context":
+        [
+            {
+                "key": "auto_complete_visible", 
+                "operator": "equal", 
+                "operand": true 
+            },
+            {
+                "key": "selector",
+                "operator": "equal",
+                "operand": "source.haxe.2,source.hxml,source.nmml,source.erazor"
+            }
+        ]
+    },
+    {
+        "keys": ["ctrl+alt+space"], 
+        "command": "haxe_display_type_completion", 
+        "context":
+        [
+            {
+                "key": "auto_complete_visible", 
+                "operator": "equal", 
+                "operand": false 
+            },
+            {
+                "key": "selector",
+                "operator": "equal",
+                "operand": "source.haxe.2,source.hxml,source.nmml,source.erazor"
+            }
+        ]
+    },
+    {
         "keys": ["ctrl+shift+1"],
         "command": "haxe_generate_code",
         "context":
