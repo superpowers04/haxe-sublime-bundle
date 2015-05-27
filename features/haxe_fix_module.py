@@ -71,7 +71,7 @@ class HaxeFixModule(sublime_plugin.TextCommand):
         src = view.substr(sublime.Region(0, self.view.size()))
 
         if cname is not None:
-            mo = re_type.finditer(src)
+            mo = re_type.search(src)
             view.replace(edit, sublime.Region(mo.start(2), mo.end(2)), cname)
             sublime.status_message(
                 '%s %s renamed to %s' % (mo.group(1), mo.group(2), cname))
