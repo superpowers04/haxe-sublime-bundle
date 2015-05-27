@@ -1878,6 +1878,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
 
     def save_temp_file( self , view ) :
+        if not view.is_dirty():
+            return None
+
         fn = view.file_name()
 
         tdir = os.path.dirname(fn)
@@ -1907,6 +1910,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
         return temp
 
     def clear_temp_file( self , view , temp ) :
+        if temp is None:
+            return
+
         fn = view.file_name()
 
         if os.path.exists( temp ) :
