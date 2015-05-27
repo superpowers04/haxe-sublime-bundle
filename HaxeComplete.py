@@ -1714,18 +1714,18 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if tree is not None :
             for i in tree.getiterator("type") :
                 hint = i.text.strip()
-                types, ret = parse_sig(hint)
+                params, ret = parse_sig(hint)
 
                 if mode == "type":
                     hint = ret
-                    if types:
-                        hint = ','.join(types)
+                    if params:
+                        hint = ','.join(params)
                         hint = '(%s):%s' % (hint, ret)
                     return hint
 
                 msg = "";
 
-                if commas >= len(types) :
+                if params is not None and commas >= len(params) :
                     if commas == 0 or hint == "Dynamic" :
                         msg = hint + ": No autocompletion available"
                         #view.window().run_command("hide_auto_complete")
@@ -1733,13 +1733,15 @@ class HaxeComplete( sublime_plugin.EventListener ):
                     else :
                         msg =  "Too many arguments."
                 else :
-                    hints = types[commas:]
-                    #print(hints)
-                    if hints == ["Void"] :
-                        hints = []
-                        msg = "Void"
-                    else :
-                        msg = ", ".join(hints)
+                    if params is None:
+                        pass
+                    else:
+                        hints = params[commas:]
+                        #print(hints)
+                        if len(hints) == 0 :
+                            msg = "Void"
+                        else :
+                            msg = ", ".join(hints)
 
             status = msg
 
