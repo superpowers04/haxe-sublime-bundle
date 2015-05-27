@@ -4,15 +4,18 @@ import sublime_plugin
 try:  # Python 3
     from .haxe_generate_code_helper import is_haxe_scope, get_context
     from .haxe_fix_module import HaxeFixModule
+    from .haxe_refactor import HaxeRefactor
 except (ValueError):  # Python 2
     from haxe_generate_code_helper import is_haxe_scope, get_context
     from haxe_fix_module import HaxeFixModule
+    from haxe_refactor import HaxeRefactor
 
 
 class HaxeRefactoring(sublime_plugin.WindowCommand):
 
     modules = [
-        HaxeFixModule
+        HaxeFixModule,
+        HaxeRefactor
     ]
 
     def complete(self):

@@ -382,6 +382,31 @@ class HaxeBuild :
 
         return self.classes, self.packs
 
+    def get_classpath(self, view):
+        filepath = view.file_name()
+
+        buildpath = self.hxml
+        if buildpath is None:
+            buildpath = self.nmml
+        if buildpath is None:
+            buildpath = self.yaml
+
+        builddir = os.path.dirname(buildpath)
+
+        abscps = []
+        for cp in self.classpaths:
+            if os.path.isabs(cp):
+                abscps.append(cp)
+            else:
+                abscps.append(
+                    os.path.normpath(os.path.join(builddir, cp)))
+
+        for cp in abscps:
+            if cp in filepath:
+                return cp
+
+        return None
+
 
 
 class HaxeDisplayCompletion( sublime_plugin.TextCommand ):
