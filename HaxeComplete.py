@@ -144,7 +144,9 @@ class HaxeLib :
     def extract_types( self ):
 
         if self.dev is True or ( self.classes is None and self.packages is None ):
-            self.classes, self.packages = HaxeComplete.inst.extract_types( self.path )
+            self.classes, self.packages = HaxeComplete.inst.extract_types(
+                self.path ,
+                cache_name = '%s_%s.cache' % (self.name, self.version) )
 
         return self.classes, self.packages
 
@@ -351,11 +353,11 @@ class HaxeBuild :
             cp = []
 
             for lib in self.libs :
-                if lib is not None :
-                    cp.append( lib.path )
-
-            for path in cp :
-                c, p = HaxeComplete.inst.extract_types( os.path.join( cwd , path ) )
+                if lib is None :
+                    continue
+                c, p = HaxeComplete.inst.extract_types(
+                    os.path.join( cwd , lib.path ),
+                    cache_name = '%s_%s.cache' % (lib.name, lib.version) )
                 classes.extend( c )
                 packs.extend( p )
 
@@ -518,11 +520,21 @@ class HaxeComplete( sublime_plugin.EventListener ):
         self.stop_server()
 
 
-    def extract_types( self , path , depth = 0 ) :
+    def extract_types( self , path , depth = 0 , cache_name = None ) :
 
         classes = []
         packs = []
         hasClasses = False
+
+        if cache_name is not None:
+            view = sublime.active_window().active_view()
+            if view.settings().get('haxe_use_cache', True):
+                cache_str = cache(cache_name)
+                if cache_str is not None:
+                    spl = cache_str.split(';')
+                    classes = spl[0].split(',')
+                    packs = spl[1].split(',')
+                    return classes, packs
 
         #print(path)
         if not os.path.exists( path ) :
@@ -575,6 +587,13 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         classes.sort()
         packs.sort()
+
+        if cache_name is not None:
+            view = sublime.active_window().active_view()
+            if view.settings().get('haxe_use_cache', True):
+                cache_str = ';'.join((','.join(classes), ','.join(packs)))
+                cache(cache_name, cache_str)
+
         return classes, packs
 
     def on_post_save( self , view ) :
@@ -763,6 +782,20 @@ class HaxeComplete( sublime_plugin.EventListener ):
             currentBuild.yaml = build
             currentBuild.cwd = os.path.dirname( build )
             currentBuild.output = "Flambe"
+
+            res, err = runcmd(
+                ["flambe","--config" , build, "haxe-flags"] )
+            lines = res.split('\n')
+
+            i, n = 0, len(lines)
+            while i < n:
+                if lines[i] == '-lib':
+                    i += 1
+                    lib = HaxeLib.get(lines[i])
+                    if lib is not None:
+                        currentBuild.libs.append(lib)
+                        print(lib.name)
+                i += 1
 
             self.add_build( currentBuild )
 
@@ -1508,7 +1541,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             self.serverMode = float(ver.group(3)) * 100 >= 209
 
             if use_cache:
-                cache_filename = 'haxe%s.cache' % ver.group(2)
+                cache_filename = 'haxe_%s.cache' % ver.group(2)
                 cached_std = cache(cache_filename)
             if cached_std is not None:
                 cp = cached_std.split(';')
