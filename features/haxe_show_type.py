@@ -11,7 +11,7 @@ except (ValueError):  # Python 2
     from haxe_format import format_statement
 
 
-re_params = re.compile(r'\b(\w*)\s*:')
+re_params = re.compile(r'\b(\w*)(\s*):')
 
 
 class HaxeShowType(sublime_plugin.TextCommand):
@@ -53,7 +53,7 @@ class HaxeShowType(sublime_plugin.TextCommand):
 
             hint = hint.replace('<', '&lt;')
             hint = hint.replace('>', '&gt;')
-            hint = re_params.sub(r'<b>\1</b>:', hint)
+            hint = re_params.sub(r'<b>\1</b>\2:', hint)
 
             if int(sublime.version()) >= 3070 and \
                     view.settings().get("haxe_use_popup", True):
