@@ -794,7 +794,6 @@ class HaxeComplete( sublime_plugin.EventListener ):
                     lib = HaxeLib.get(lines[i])
                     if lib is not None:
                         currentBuild.libs.append(lib)
-                        print(lib.name)
                 i += 1
 
             self.add_build( currentBuild )
