@@ -1,4 +1,3 @@
-import re
 import os
 import sublime
 import sublime_plugin
@@ -15,9 +14,6 @@ try:  # Python 3
 except (ValueError):  # Python 2
     from haxe_helper import HaxeComplete_inst
     from haxe_format import format_statement
-
-
-re_punc = re.compile(r'([,\(\):])')
 
 
 class HaxeColorScheme(sublime_plugin.EventListener):
@@ -124,8 +120,6 @@ class HaxeShowPopup(sublime_plugin.TextCommand):
         if not text:
             return
 
-        text = re_punc.sub(r'<b>\1</b>', text)
-
         view.show_popup(
             HaxeColorScheme.inst.get_styles() + text, max_width=700)
 
@@ -217,6 +211,8 @@ class HaxeHint(sublime_plugin.TextCommand):
                 text += ',%s' % h
 
         text = format_statement(view, text)
+        text = text.replace('<', '&lt;')
+        text = text.replace('>', '&gt;')
         text = text.format('<b>', '</b>')
 
         view.run_command('haxe_show_popup', {

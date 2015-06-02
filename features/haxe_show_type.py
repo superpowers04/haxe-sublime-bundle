@@ -1,4 +1,5 @@
 import codecs
+import re
 import sublime
 import sublime_plugin
 
@@ -8,6 +9,9 @@ try:  # Python 3
 except (ValueError):  # Python 2
     from haxe_helper import HaxeComplete_inst
     from haxe_format import format_statement
+
+
+re_params = re.compile(r'\b(\w*):')
 
 
 class HaxeShowType(sublime_plugin.TextCommand):
@@ -45,9 +49,14 @@ class HaxeShowType(sublime_plugin.TextCommand):
             view.set_status("haxe-status", status)
         else:
             hint = format_statement(view, hint)
+            view.set_status("haxe-status", hint)
+
+            hint = hint.replace('<', '&lt;')
+            hint = hint.replace('>', '&gt;')
+            hint = re_params.sub(r'<b>\1</b>:', hint)
+
             if int(sublime.version()) >= 3070 and \
                     view.settings().get("haxe_use_popup", True):
                 view.run_command('haxe_show_popup', {'text': hint})
             else:
                 view.show_popup_menu([hint], lambda i: None)
-            view.set_status("haxe-status", hint)
