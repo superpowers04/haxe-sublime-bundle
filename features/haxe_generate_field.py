@@ -134,15 +134,6 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
                     return (pos, pre, post)
                 last_field = field
 
-            if same_group and last_field is not None:
-                post = '\n' + bl_var
-                if 'function' in ft:
-                    post = '\n' + bl_method
-                pre = ''
-                return (
-                    find_line_start_pos(view, last_field.region.begin()),
-                    pre, post)
-
         pre = '\n' + bl_top
         if has_fields:
             post = bl_group
