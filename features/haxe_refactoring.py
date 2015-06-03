@@ -5,16 +5,19 @@ try:  # Python 3
     from .haxe_generate_code_helper import is_haxe_scope, get_context
     from .haxe_fix_module import HaxeFixModule
     from .haxe_refactor import HaxeRefactor
+    from .haxe_promote_var import HaxePromoteVar
 except (ValueError):  # Python 2
     from haxe_generate_code_helper import is_haxe_scope, get_context
     from haxe_fix_module import HaxeFixModule
     from haxe_refactor import HaxeRefactor
+    from haxe_promote_var import HaxePromoteVar
 
 
 class HaxeRefactoring(sublime_plugin.WindowCommand):
 
     modules = [
         HaxeFixModule,
+        HaxePromoteVar,
         HaxeRefactor
     ]
 
