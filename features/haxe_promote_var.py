@@ -6,11 +6,13 @@ try:  # Python 3
 except (ValueError):  # Python 2
     from haxe_generate_code_helper import *
 
+re_s = re.compile(r'\s*$')
+
 
 class HaxePromoteVarEdit(sublime_plugin.TextCommand):
 
-    def run(self, edit, pos0, pos1):
-        self.view.erase(edit, sublime.Region(pos0, pos1))
+    def run(self, edit, pos0, pos1, text):
+        self.view.replace(edit, sublime.Region(pos0, pos1), text)
 
 
 class HaxePromoteVar(sublime_plugin.WindowCommand):
@@ -21,7 +23,8 @@ class HaxePromoteVar(sublime_plugin.WindowCommand):
 
         self.window.run_command('haxe_promote_var_edit', {
             'pos0': self.pos0,
-            'pos1': self.pos1
+            'pos1': self.pos1,
+            'text': self.name + self.post
         })
         self.window.run_command('haxe_generate_field', {
             'name': self.name,
@@ -57,7 +60,9 @@ class HaxePromoteVar(sublime_plugin.WindowCommand):
         if not self.context.method or not self.context.word:
             return
 
-        re_var = re.compile(r'(var\s+)' + self.context.word.name)
+        re_var = re.compile(
+            r'(var\s+)' + self.context.word.name +
+            r'([^=;]*)(\s*[=;])', re.M)
         src = view.substr(self.context.method.region)
         last_mo = None
         method_pos = self.context.method.region.begin()
@@ -70,8 +75,10 @@ class HaxePromoteVar(sublime_plugin.WindowCommand):
 
         if last_mo:
             self.pos0 = last_mo.start(1) + method_pos
-            self.pos1 = last_mo.end(1) + method_pos
+            self.pos1 = last_mo.end(3) + method_pos
             self.name = self.context.word.name
+            self.post = (
+                re_s.search(last_mo.group(2)).group(0) + last_mo.group(3))
             options = [
                 'New var %s' % self.name,
                 'New static var %s' % self.name]
