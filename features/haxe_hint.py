@@ -149,7 +149,9 @@ class HaxeHint(sublime_plugin.TextCommand):
         view = self.view
 
         if not input:
-            if view.substr(view.sel()[0].end()) == '(':
+            pos = view.sel()[0].end()
+            if view.substr(pos) == '(' and view.score_selector(
+                    pos - 1, 'source.haxe.2 meta.parameters.haxe.2') == 0:
                 view.run_command('haxe_show_type')
                 return
 
