@@ -413,33 +413,27 @@ class HaxeBuild :
 
 class HaxeDisplayCompletion( sublime_plugin.TextCommand ):
 
-    def run( self , edit ) :
-        #print("completing")
+    def show_auto_complete(self):
         view = self.view
 
         HaxeComplete.inst.force_display_completion = True
-        view.run_command( "auto_complete" , {
-            "api_completions_only" : True,
-            "disable_auto_insert" : True,
-            "next_completion_if_showing" : False
-        } )
-        HaxeComplete.inst.force_display_completion = False
-
-
-class HaxeDisplayTypeCompletion( sublime_plugin.TextCommand ):
-
-    def run( self , edit ) :
-        view = self.view
-
-        HaxeComplete.inst.force_display_completion = True
-        HaxeComplete.inst.type_completion_only = True
-        view.run_command( "auto_complete" , {
-            "api_completions_only" : True,
-            "disable_auto_insert" : True,
-            "next_completion_if_showing" : False
-        } )
+        HaxeComplete.inst.type_completion_only = self.type_completion
+        view.run_command('auto_complete', {
+            'api_completions_only': True,
+            'disable_auto_insert': True,
+            'next_completion_if_showing': False
+        })
         HaxeComplete.inst.force_display_completion = False
         HaxeComplete.inst.type_completion_only = False
+
+    def run(self, edit, type_completion=False, hide=False):
+        view = self.view
+        self.type_completion = type_completion
+        if hide:
+            view.run_command('hide_auto_complete')
+            sublime.set_timeout(self.show_auto_complete, 100)
+        else:
+            self.show_auto_complete()
 
 
 class HaxeInsertCompletion( sublime_plugin.TextCommand ):

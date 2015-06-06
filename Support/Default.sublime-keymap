@@ -1,7 +1,10 @@
 [
     {
         "keys": ["ctrl+space"], 
-        "command": "hide_auto_complete", 
+        "command": "haxe_display_completion", 
+        "args": {
+            "hide": true
+        },
         "context":
         [
             {
@@ -35,7 +38,11 @@
     },
     {
         "keys": ["ctrl+alt+space"], 
-        "command": "hide_auto_complete", 
+        "command": "haxe_display_completion", 
+        "args": {
+            "hide": true,
+            "type_completion": true
+        },
         "context":
         [
             {
@@ -52,7 +59,10 @@
     },
     {
         "keys": ["ctrl+alt+space"], 
-        "command": "haxe_display_type_completion", 
+        "command": "haxe_display_completion", 
+        "args": {
+            "type_completion": true
+        },
         "context":
         [
             {
