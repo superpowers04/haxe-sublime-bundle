@@ -83,6 +83,8 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         group_prop = view.settings().get(
             'haxe_group_property_and_accessors', True)
         has_fields = False
+        has_field_in_same_group = False
+        prev_post = None
         scan = False
 
         group_order, group_svars, group_smethods = self.get_group_order()
@@ -109,16 +111,23 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
             last_field = None
             for field in reversed(group_map[ft]):
                 has_fields = True
+                if same_group:
+                    has_field_in_same_group = True
                 if group_prop and not field_is_var:
                     if self.is_getter_setter(field):
                         continue
+
                 if field_name >= field.name or not same_group:
                     if not same_group:
                         pre = '\n' + bl_group
-                        post = bl_group
+                        if has_field_in_same_group:
+                            post = prev_post
+                        else:
+                            post = bl_group
                     elif not last_field:
                         post = bl_group
                     pos = field.region.end()
+
                     if group_prop and self.is_property(view, field) and \
                             (field_is_var or not same_group):
                         get_name = 'get_' + field.name
@@ -131,12 +140,18 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
                             pre = '\n' + bl_group
                             pos = max(
                                 pos, ctx.type.field_map[set_name].region.end())
+
                     return (pos, pre, post)
                 last_field = field
 
+            prev_post = post
+
         pre = '\n' + bl_top
         if has_fields:
-            post = bl_group
+            if has_field_in_same_group:
+                post = prev_post
+            else:
+                post = bl_group
         else:
             post = ''
 
