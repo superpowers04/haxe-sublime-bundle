@@ -69,9 +69,11 @@ class HaxeGenerateGetSet(sublime_plugin.WindowCommand):
             view, True, False, True, False, is_static)
         ftype = FIELD_STATIC_FUNC if is_static else FIELD_FUNC
 
-        setter = mo.group(2) and mo.group(2).find('set') == 0 and \
+        set_aid = mo.group(2)
+        setter = set_aid and set_aid.find('set') == 0 and \
             set_name not in ctx.type.field_map
-        getter = mo.group(1) and mo.group(1).find('get') == 0 and \
+        get_aid = mo.group(1)
+        getter = get_aid and get_aid.find('get') == 0 and \
             get_name not in ctx.type.field_map
 
         if setter:
@@ -82,8 +84,13 @@ class HaxeGenerateGetSet(sublime_plugin.WindowCommand):
                 text_set = '\t%s$HX_W_A=${HX_A_W}value$HX_W_SC;\n' % (
                     prop_var_name)
                 val = prop_var_name
+            elif get_aid == 'default':
+                text_set = '\t%s$HX_W_A=${HX_A_W}value$HX_W_SC;\n' % (
+                    prop_name)
+                val = prop_name
             else:
                 text_set = ''
+                val = 'value'
             text = (
                 '%s'
                 '%s function %s$HX_W_ORB(${HX_ORB_W}'
