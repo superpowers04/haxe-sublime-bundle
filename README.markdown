@@ -1,3 +1,6 @@
+[![TravisCI Build Status](https://travis-ci.org/clemos/haxe-sublime-bundle.svg?branch=master)](https://travis-ci.org/clemos/haxe-sublime-bundle)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/clemos/haxe-sublime-bundle?branch=master&svg=true)](https://ci.appveyor.com/project/clemos/haxe-sublime-bundle)
+
 ### Introduction
 An Haxe Bundle for [Sublime Text 2](http://www.sublimetext.com/2) and [Sublime Text 3](http://www.sublimetext.com/3)
 
