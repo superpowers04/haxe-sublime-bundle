@@ -1,13 +1,41 @@
 import sublime_plugin
 
 try:  # Python 3
-    from .haxe_helper import HaxeComplete_inst
+    from .haxe_helper import HaxeComplete_inst, parse_sig
     from .haxe_generate_code_helper import *
     from .haxe_format import format_statement
 except (ValueError):  # Python 2
-    from haxe_helper import HaxeComplete_inst
+    from haxe_helper import HaxeComplete_inst, parse_sig
     from haxe_generate_code_helper import *
     from haxe_format import format_statement
+
+
+def is_getter_setter(func, ctx):
+    fname = func[1]
+    fname4 = fname[:4]
+    if fname4 == 'get_' or fname4 == 'set_':
+        prop_name = fname[4:]
+        return prop_name in ctx.type.field_map
+
+    return False
+
+
+def is_property(var, view):
+    mo = re_prop_params.search(view.substr(var[2]))
+    return mo is not None
+
+
+def is_same_group(field_type, group_type, group_svars, group_smethods):
+    is_same = field_type == group_type
+    field_is_var = 'var' in field_type
+    group_is_var = 'var' in group_type
+
+    if not group_svars and field_is_var:
+        is_same = field_is_var == group_is_var
+    if not group_smethods and not field_is_var:
+        is_same = field_is_var == group_is_var
+
+    return is_same
 
 
 class HaxeGenerateFieldEdit(sublime_plugin.TextCommand):
@@ -84,19 +112,16 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
             'haxe_group_property_and_accessors', True)
         has_fields = False
         has_field_in_same_group = False
-        prev_post = None
+        same_group_post = None
         scan = False
 
         group_order, group_svars, group_smethods = self.get_group_order()
         group_map = self.get_group_map(group_svars, group_smethods)
 
         for ft in reversed(group_order):
-            group_is_var = 'var' in ft
-            same_group = ft == field_type
-            if not group_svars and field_is_var:
-                same_group = field_is_var == group_is_var
-            if not group_smethods and not field_is_var:
-                same_group = field_is_var == group_is_var
+            same_group = is_same_group(
+                field_type, ft, group_svars, group_smethods)
+
             if not scan and not same_group:
                 has_fields = has_fields or group_map[ft]
                 continue
@@ -108,27 +133,30 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
                 pre = '\n' + bl_method
                 post = bl_method
 
+            if same_group:
+                same_group_post = post
+
             last_field = None
             for field in reversed(group_map[ft]):
                 has_fields = True
                 if same_group:
                     has_field_in_same_group = True
                 if group_prop and not field_is_var:
-                    if self.is_getter_setter(field):
+                    if is_getter_setter(field, self.context):
                         continue
 
                 if field_name >= field.name or not same_group:
                     if not same_group:
                         pre = '\n' + bl_group
                         if has_field_in_same_group:
-                            post = prev_post
+                            post = same_group_post
                         else:
                             post = bl_group
                     elif not last_field:
                         post = bl_group
                     pos = field.region.end()
 
-                    if group_prop and self.is_property(view, field) and \
+                    if group_prop and is_property(field, view) and \
                             (field_is_var or not same_group):
                         get_name = 'get_' + field.name
                         set_name = 'set_' + field.name
@@ -144,12 +172,10 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
                     return (pos, pre, post)
                 last_field = field
 
-            prev_post = post
-
         pre = '\n' + bl_top
         if has_fields:
             if has_field_in_same_group:
-                post = prev_post
+                post = same_group_post
             else:
                 post = bl_group
         else:
@@ -252,8 +278,8 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         view = self.window.active_view()
         complete = HaxeComplete_inst()
 
-        for r in view.sel():
-            comps, hints = complete.get_haxe_completions(view, r.end())
+        comps, hints = complete.get_haxe_completions(
+            view, view.sel()[0].end(), ignoreTopLevel=True)
 
         return hints
 
@@ -265,18 +291,23 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
             self.context.type.group == 'abstract', self.static)
 
         types = None
+        ret = None
         if SCOPE_PARAMETERS in self.context.scope and \
                 self.caret_name:
             param_type = self.get_param_type()
             if param_type:
-                tp = param_type[0].split(':')[1]
-                types = [r.strip() for r in tp.split('->')]
+                tp = param_type[0].split(':')[1].strip()
+                types, ret = parse_sig(tp)
 
         if 'var' in self.field:
             text = '%svar %s:%s$0;'
             text = format_statement(view, text)
-            ret = 'Dynamic'
-            if types:
+            if ret is None:
+                ret = 'Dynamic'
+            if types is not None:
+                if not types:
+                    types.append('Void')
+                types.append(ret)
                 ret = '$HX_W_AR->${HX_AR_W}'.join(types)
             text = text % (
                 mod,
@@ -286,12 +317,12 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
             text = '%sfunction %s(%s):%s$HX_W_OCB{\n\t$0\n}'
             text = format_statement(view, text)
             params = ''
-            ret = 'Void'
+            if ret is None:
+                ret = 'Void'
             ret_idx = idx + 2
             param_idx = 1
 
             if types:
-                ret = types.pop()
                 for tp in types:
                     if params:
                         params += '$HX_W_CM,${HX_CM_W}'
@@ -307,19 +338,6 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
                 '${%d:%s}' % (ret_idx, ret))
 
         return text
-
-    def is_getter_setter(self, func):
-        fname = func[1]
-        fname4 = fname[:4]
-        if fname4 == 'get_' or fname4 == 'set_':
-            prop_name = fname[4:]
-            return prop_name in self.context.type.field_map
-
-        return False
-
-    def is_property(self, view, var):
-        mo = re_prop_params.search(view.substr(var[2]))
-        return mo is not None
 
     def on_input(self, name):
         name = name.strip()
@@ -340,7 +358,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
         def add(name, field):
             label = '...' if name is None else name
             cmds.append((
-                'New %s %s' % (field, label),
+                'Add %s %s' % (field, label),
                 'haxe_generate_field',
                 {'name': name, 'field': field}))
 
