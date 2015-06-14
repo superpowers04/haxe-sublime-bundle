@@ -37,7 +37,7 @@ try: # Python 3
     from .features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from .features.haxe_helper import runcmd, show_quick_panel, cache
+    from .features.haxe_helper import runcmd, show_quick_panel, cache, parse_sig
     from .features.haxe_helper import spaceChars, wordChars, importLine, packageLine
     from .features.haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
     from .features.haxe_helper import libFlag, skippable, inAnonymous, extractTag
@@ -52,7 +52,7 @@ except (ValueError): # Python 2
     from features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from features.haxe_helper import runcmd, show_quick_panel, cache
+    from features.haxe_helper import runcmd, show_quick_panel, cache, parse_sig
     from features.haxe_helper import spaceChars, wordChars, importLine, packageLine
     from features.haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
     from features.haxe_helper import libFlag, skippable, inAnonymous, extractTag
@@ -91,34 +91,6 @@ except ImportError as e :
     ExecCommand = stexec.ExecCommand
     AsyncProcess = stexec.AsyncProcess
     unicode = str #dirty...
-
-
-def parse_sig(sig):
-    params = []
-    spl = sig.split(" -> ")
-    pars = 0;
-    currentType = [];
-
-    for t in spl :
-        currentType.append( t )
-        if "(" in t or "{" in t or "<" in t :
-            pars += 1
-        if ")" in t or "}" in t or ">" in t :
-            pars -= 1
-
-        if pars == 0 :
-            params.append(
-                " -> ".join(currentType).replace('(', '').replace(')', ''))
-            currentType = []
-
-    ret = params.pop()
-
-    if not params:
-        params = None
-    elif len(params) == 1 and params[0] == "Void" :
-        params = []
-
-    return params, ret
 
 
 class HaxeLib :

@@ -97,6 +97,35 @@ def cache(filename, data=None):
 
     return None
 
+
+def parse_sig(sig):
+    params = []
+    spl = sig.split(" -> ")
+    pars = 0;
+    currentType = [];
+
+    for t in spl :
+        currentType.append( t )
+        if "(" in t or "{" in t or "<" in t :
+            pars += 1
+        if ")" in t or "}" in t or ">" in t :
+            pars -= 1
+
+        if pars == 0 :
+            params.append(
+                " -> ".join(currentType).replace('(', '').replace(')', ''))
+            currentType = []
+
+    ret = params.pop()
+
+    if not params:
+        params = None
+    elif len(params) == 1 and params[0] == "Void" :
+        params = []
+
+    return params, ret
+
+
 def runcmd( args, input=None ):
     try:
         if int(sublime.version()) >= 3000 :
