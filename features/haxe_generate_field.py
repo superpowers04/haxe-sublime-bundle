@@ -298,6 +298,11 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
             if param_type:
                 tp = param_type[0].split(':')[1].strip()
                 types, ret = parse_sig(tp)
+                if types is not None:
+                    types = [shorten_imported_type(
+                        tp, self.context.imports) for tp in types]
+                if ret is not None:
+                    ret = shorten_imported_type(ret, self.context.imports)
 
         if 'var' in self.field:
             text = '%svar %s:%s$0;'

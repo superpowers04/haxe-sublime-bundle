@@ -18,6 +18,7 @@ FIELD_VAR = 'var'
 FIELD_STATIC_FUNC = 'static function'
 FIELD_STATIC_VAR = 'static var'
 
+re_import = re.compile('^([ \t]*)import\s+([a-z0-9._*]+);', re.I | re.M)
 re_prop_params = re.compile(r'\((\w*)\s*,\s*(\w*)\)\s*:?\s*(\w*)')
 re_word = re.compile('^[_a-z]\w*$')
 
@@ -201,11 +202,24 @@ def get_editable_mods(
         mods.append(mod)
         del mod_map[c]
 
-    return ''.join(mods).strip()
+    return ''.join(mods)
 
 
 def is_haxe_scope(view):
     return view.score_selector(0, "source.haxe.2") > 0
+
+
+def is_imported(tp, imports):
+    for itp in imports:
+        itp = itp.strip('.*')
+        if itp == tp:
+            return True
+        if itp in tp:
+            rtp = tp.replace(itp, '')
+            if rtp.count('.') == 1:
+                return True
+
+    return False
 
 
 def set_pos(view, pos, center=True):
@@ -213,6 +227,14 @@ def set_pos(view, pos, center=True):
     view.sel().add(sublime.Region(pos, pos))
     if center:
         view.show_at_center(pos)
+
+
+def shorten_imported_type(tp, imports):
+    if '.' in tp:
+        if is_imported(tp, imports):
+            tp = tp.rpartition('.')[2]
+
+    return tp
 
 
 CtxVar = namedtuple('CtxVar', ['group', 'name', 'region'])
@@ -236,6 +258,14 @@ class HaxeContext(object):
         self._method = None
         self._word = None
         self._src = None
+        self._imports = None
+
+    def get_imports(self):
+        if self._imports is None:
+            self._imports = \
+                [mo.group(2) for mo in re_import.finditer(self.src)]
+
+        return self._imports
 
     def get_method(self):
         if self._method is None:
@@ -386,3 +416,4 @@ class HaxeContext(object):
     var = property(get_var)
     word = property(get_word)
     src = property(get_src)
+    imports = property(get_imports)
