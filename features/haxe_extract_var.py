@@ -10,7 +10,7 @@ class HaxeExtractVar(sublime_plugin.TextCommand):
 
     def find_insert_pos(self, src):
         ctx = self.context
-        terminator_chars = ';'
+        terminator_chars = ';{}'
         space_chars = ' \t'
         new_line_pos = -1
         sel_r = self.view.sel()[0]
@@ -97,7 +97,7 @@ class HaxeExtractVar(sublime_plugin.TextCommand):
         if not self.context.method:
             return
 
-        src = view.substr(sublime.Region(0, view.size()))
+        src = self.context.src
         pos, indent = self.find_insert_pos(src)
         text, pos_end = self.get_text(src, pos, indent)
 
