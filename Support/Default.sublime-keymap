@@ -136,6 +136,22 @@
         ]
     },
     {
+        "keys": ["ctrl+shift+alt+b"],
+        "command": "haxe_select_build",
+        "args":
+        {
+            "all_views": true
+        },
+        "context":
+        [
+            {
+                "key": "selector",
+                "operator": "equal",
+                "operand": "source.haxe.2,source.hxml,source.nmml,source.erazor"
+            }
+        ]
+    },
+    {
         "keys": ["ctrl+enter"],
         "command": "run_macro_file",
         "args":

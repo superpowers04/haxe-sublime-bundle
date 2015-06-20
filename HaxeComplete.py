@@ -435,11 +435,11 @@ class HaxeRunBuild( sublime_plugin.TextCommand ):
 
 
 class HaxeSelectBuild( sublime_plugin.TextCommand ):
-    def run( self , edit ) :
+    def run( self , edit , all_views = False ) :
         complete = HaxeComplete.inst
         view = self.view
 
-        complete.select_build( view )
+        complete.select_build( view , all_views )
 
 
 class HaxeComplete( sublime_plugin.EventListener ):
@@ -643,13 +643,13 @@ class HaxeComplete( sublime_plugin.EventListener ):
             })
 
 
-    def select_build( self , view ) :
+    def select_build( self , view , all_views = False ) :
         scopes = view.scope_name(view.sel()[0].end()).split()
 
         if 'source.hxml' in scopes:
             view.run_command("save")
 
-        self.extract_build_args( view , True )
+        self.extract_build_args( view , True , all_views )
 
 
     def find_nmml( self, folder ) :
@@ -941,7 +941,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
         self.find_nmml(folder)
         self.find_yaml(folder)
 
-    def extract_build_args( self , view , forcePanel = False ) :
+    def extract_build_args( self , view ,
+            forcePanel = False , all_views = False ) :
         #print("extract build args")
         self.builds = []
 
@@ -1035,28 +1036,35 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             self.selectingBuild = True
             sublime.status_message("Please select your build")
-            show_quick_panel( view.window() , buildsView , lambda i : self.set_current_build(view, int(i), forcePanel) , sublime.MONOSPACE_FONT )
+            show_quick_panel( view.window() , buildsView , lambda i : self.set_current_build(view, int(i), forcePanel, all_views) , sublime.MONOSPACE_FONT )
 
         elif settings.has("haxe-build-id"):
             self.set_current_build( view , int(settings.get("haxe-build-id")), forcePanel )
 
         else:
             build_id = 0
-            if project_folder in self.selected_build_id_map:
-                build_id = self.selected_build_id_map[project_folder]
+            if project_folder is not None:
+                if project_folder in self.selected_build_id_map:
+                    build_id = self.selected_build_id_map[project_folder]
+                else:
+                    for i in range(0, len(self.builds)):
+                        if project_folder in self.builds[i].hxml:
+                            build_id = i
+                            break
             self.set_current_build(view, build_id, forcePanel)
 
 
-    def set_current_build( self , view , id , forcePanel ) :
+    def set_current_build( self , view , id , forcePanel ,
+            all_views = False ) :
         if id == -1:
             return
 
         if id >= len(self.builds) :
             id = 0
 
+        win = view.window()
+        project_folder = None
         if forcePanel:
-            win = view.window()
-            project_folder = None
             if win is not None :
                 win_folders = win.folders()
                 for f in win_folders:
@@ -1065,7 +1073,15 @@ class HaxeComplete( sublime_plugin.EventListener ):
             if project_folder is not None:
                 self.selected_build_id_map[project_folder] = id
 
-        view.settings().set( "haxe-build-id" , id )
+        if all_views and win is not None and project_folder is not None:
+            for v in win.views():
+                if v.score_selector(0,'source.haxe.2') == 0:
+                    continue
+                if project_folder + os.sep not in v.file_name():
+                    continue
+                v.settings().set( "haxe-build-id" , id )
+        else:
+            view.settings().set( "haxe-build-id" , id )
 
         if len(self.builds) > 0 :
             self.currentBuild = self.builds[id]
