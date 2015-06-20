@@ -481,6 +481,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         self.build_cache = {}
         self.force_display_completion = False
         self.type_completion_only = False
+        self.selected_build_id_map = {}
 
     def __del__(self) :
         self.stop_server()
@@ -575,6 +576,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
     def on_open_file( self , view ) :
         if view.is_loading() :
             return;
+
+        if view.window() is None:
+            return
 
         if view.score_selector(0,'source.haxe.2') > 0 :
             HaxeCreateType.on_activated( view )
@@ -1037,7 +1041,10 @@ class HaxeComplete( sublime_plugin.EventListener ):
             self.set_current_build( view , int(settings.get("haxe-build-id")), forcePanel )
 
         else:
-            self.set_current_build( view , int(0), forcePanel )
+            build_id = 0
+            if project_folder in self.selected_build_id_map:
+                build_id = self.selected_build_id_map[project_folder]
+            self.set_current_build(view, build_id, forcePanel)
 
 
     def set_current_build( self , view , id , forcePanel ) :
@@ -1046,6 +1053,17 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         if id >= len(self.builds) :
             id = 0
+
+        if forcePanel:
+            win = view.window()
+            project_folder = None
+            if win is not None :
+                win_folders = win.folders()
+                for f in win_folders:
+                    if f + os.sep in view.file_name() :
+                        project_folder = f
+            if project_folder is not None:
+                self.selected_build_id_map[project_folder] = id
 
         view.settings().set( "haxe-build-id" , id )
 
@@ -1456,6 +1474,23 @@ class HaxeComplete( sublime_plugin.EventListener ):
         settings = view.settings()
         self.haxe_settings = sublime.load_settings(self.haxe_settings_file)
         haxepath = settings.get("haxe_path","haxe")
+
+        #init selected_build_id_map
+        win = view.window()
+        if win is not None :
+            for v in win.views():
+                project_folder = None
+                win_folders = win.folders()
+                if not v.settings().has('haxe-build-id'):
+                    continue
+
+                for f in win_folders:
+                    if f + os.sep in v.file_name() :
+                        project_folder = f
+
+                if project_folder is not None:
+                    self.selected_build_id_map[project_folder] = \
+                        int(v.settings().get('haxe-build-id'))
 
         nme_target_idx = 0
         try:
