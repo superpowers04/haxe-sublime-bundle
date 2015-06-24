@@ -9,6 +9,8 @@ except (ValueError):  # Python 2
     from haxe_generate_code_helper import *
     from haxe_format import format_statement
 
+re_field_name = re.compile('^[_a-zA-Z]\w*$')
+
 
 def is_getter_setter(func, ctx):
     fname = func[1]
@@ -347,7 +349,7 @@ class HaxeGenerateField(sublime_plugin.WindowCommand):
 
     def on_input(self, name):
         name = name.strip()
-        if not re_word.search(name):
+        if not re_field_name.search(name):
             sublime.status_message('Invalid field name')
             return
 
