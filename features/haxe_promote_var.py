@@ -38,6 +38,8 @@ def get_type(view, pos, name):
 class HaxePromoteVarEdit(sublime_plugin.TextCommand):
 
     def run(self, edit, pos0, pos1, text):
+        pos0 = int(pos0)
+        pos1 = int(pos1)
         self.view.replace(edit, sublime.Region(pos0, pos1), text)
 
 

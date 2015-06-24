@@ -224,7 +224,7 @@ def is_imported(tp, imports):
 
 def set_pos(view, pos, center=True):
     view.sel().clear()
-    view.sel().add(sublime.Region(int(pos), int(pos)))
+    view.sel().add(sublime.Region(pos, pos))
     if center:
         view.show_at_center(pos)
 

@@ -45,6 +45,7 @@ class HaxeGenerateFieldEdit(sublime_plugin.TextCommand):
             return
 
         view = self.view
+        pos = int(pos)
 
         old_pos = view.sel()[0].end()
         old_size = view.size()

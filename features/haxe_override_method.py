@@ -20,6 +20,7 @@ class HaxeOverrideMethodEdit(sublime_plugin.TextCommand):
     def run(self, edit, pos, name):
         view = self.view
         tmp = 'function %s(){this.|}' % name
+        pos = int(pos)
 
         view.insert(edit, pos, tmp)
 
