@@ -127,11 +127,23 @@ def parse_sig(sig):
 
 
 def runcmd( args, input=None ):
+    merged_env = os.environ.copy()
+    view = sublime.active_window().active_view()
+
+    if view is not None :
+        settings = view.settings()
+        user_env = settings.get('build_env')
+        if user_env:
+            merged_env.update(user_env)
+        if settings.has("haxe_library_path") :
+            merged_env["HAXE_LIBRARY_PATH"] = settings.get("haxe_library_path",".")
+            merged_env["HAXE_STD_PATH"] = settings.get("haxe_library_path",".")
+
     try:
         if int(sublime.version()) >= 3000 :
-            p = Popen(args, stdout=PIPE, stderr=PIPE, stdin=PIPE, startupinfo=STARTUP_INFO)
+            p = Popen(args, env=merged_env, stdout=PIPE, stderr=PIPE, stdin=PIPE, startupinfo=STARTUP_INFO)
         else:
-            p = Popen([a.encode(sys.getfilesystemencoding()) for a in args], stdout=PIPE, stderr=PIPE, stdin=PIPE, startupinfo=STARTUP_INFO)
+            p = Popen([a.encode(sys.getfilesystemencoding()) for a in args], env=merged_env, stdout=PIPE, stderr=PIPE, stdin=PIPE, startupinfo=STARTUP_INFO)
         if isinstance(input, unicode) :
             input = input.encode('utf-8')
         out, err = p.communicate(input=input)
