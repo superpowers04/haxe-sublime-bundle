@@ -98,6 +98,41 @@ def cache(filename, data=None):
     return None
 
 
+def get_env(copy_os_env=False):
+    env = {}
+    env["PATH"] = os.environ["PATH"]
+
+    if copy_os_env:
+        env = os.environ.copy()
+
+    view = sublime.active_window().active_view()
+
+    if view is not None :
+        settings = view.settings()
+
+        user_env = settings.get('build_env')
+        if user_env:
+            env.update(user_env)
+
+        if settings.has("haxe_library_path"):
+            env["HAXE_LIBRARY_PATH"] = settings.get(
+                "haxe_library_path", ".")
+            env["HAXE_STD_PATH"] = settings.get(
+                "haxe_library_path", ".")
+
+        if settings.has("haxe_path"):
+            env["HAXE_PATH"] = settings.get(
+                "haxe_path", "haxe")
+            env["PATH"] += os.pathsep + os.path.dirname(
+                settings.get("haxe_path"))
+
+        if settings.has("haxelib_path"):
+            env["PATH"] += os.pathsep + os.path.dirname(
+                settings.get("haxelib_path"))
+
+    return env
+
+
 def parse_sig(sig):
     params = []
     spl = sig.split(" -> ")
@@ -127,17 +162,7 @@ def parse_sig(sig):
 
 
 def runcmd( args, input=None ):
-    merged_env = os.environ.copy()
-    view = sublime.active_window().active_view()
-
-    if view is not None :
-        settings = view.settings()
-        user_env = settings.get('build_env')
-        if user_env:
-            merged_env.update(user_env)
-        if settings.has("haxe_library_path") :
-            merged_env["HAXE_LIBRARY_PATH"] = settings.get("haxe_library_path",".")
-            merged_env["HAXE_STD_PATH"] = settings.get("haxe_library_path",".")
+    merged_env = get_env(True)
 
     try:
         if int(sublime.version()) >= 3000 :

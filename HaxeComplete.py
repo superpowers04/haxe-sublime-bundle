@@ -37,7 +37,7 @@ try: # Python 3
     from .features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from .features.haxe_helper import runcmd, show_quick_panel, cache, parse_sig
+    from .features.haxe_helper import runcmd, show_quick_panel, cache, parse_sig, get_env
     from .features.haxe_helper import spaceChars, wordChars, importLine, packageLine
     from .features.haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
     from .features.haxe_helper import libFlag, skippable, inAnonymous, extractTag
@@ -52,7 +52,7 @@ except (ValueError): # Python 2
     from features.haxelib import *
 
     # Import the helper functions and regex helpers
-    from features.haxe_helper import runcmd, show_quick_panel, cache, parse_sig
+    from features.haxe_helper import runcmd, show_quick_panel, cache, parse_sig, get_env
     from features.haxe_helper import spaceChars, wordChars, importLine, packageLine
     from features.haxe_helper import compactFunc, compactProp, libLine, classpathLine, typeDecl
     from features.haxe_helper import libFlag, skippable, inAnonymous, extractTag
@@ -1456,6 +1456,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         view.window().run_command("exec", {
             "cmd": cmd,
+            "env": get_env(),
             "working_dir": os.path.dirname(build.nmml),
             "file_regex": haxeFileRegex #"^([^:]*):([0-9]+): characters [0-9]+-([0-9]+) :.*$"
         })
@@ -1473,6 +1474,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
         view.window().run_command("exec", {
             "cmd": cmd,
+            "env": get_env(),
             "working_dir": build.cwd,
             "file_regex": haxeFileRegex #"^([^:]*):([0-9]+): characters [0-9]+-([0-9]+) :.*$"
         })
@@ -1589,21 +1591,11 @@ class HaxeComplete( sublime_plugin.EventListener ):
         #self.stop_server()
         if self.serverMode and self.serverProc is None :
             try:
-                env = os.environ.copy()
-                merged_env = env.copy()
+                # env = os.environ.copy()
+                merged_env = get_env(True)
 
                 if view is not None :
-                    user_env = view.settings().get('build_env')
-                    if user_env:
-                        merged_env.update(user_env)
-
-                if view is not None :
-                    settings = view.settings()
-                    if settings.has("haxe_library_path") :
-                        env["HAXE_LIBRARY_PATH"] = settings.get("haxe_library_path",".")
-                        env["HAXE_STD_PATH"] = settings.get("haxe_library_path",".")
-
-                    haxepath = settings.get("haxe_path" , "haxe")
+                    haxepath = view.settings().get("haxe_path" , "haxe")
 
                 self.serverPort+=1
                 cmd = [haxepath , "--wait" , str(self.serverPort) ]
@@ -1712,10 +1704,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             #print(encoded_cmd)
 
-            env = {}
-            if settings.has("haxe_library_path") :
-                env["HAXE_LIBRARY_PATH"] = settings.get("haxe_library_path",".")
-                env["HAXE_STD_PATH"] = settings.get("haxe_library_path",".")
+            env = get_env()
 
             view.window().run_command("haxe_exec", {
                 "cmd": encoded_cmd,
