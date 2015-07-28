@@ -1458,6 +1458,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             "cmd": cmd,
             "env": get_env(),
             "working_dir": os.path.dirname(build.nmml),
+            "syntax": "Packages/Haxe/Support/HaxeResults.hidden-tmLanguage",
             "file_regex": haxeFileRegex #"^([^:]*):([0-9]+): characters [0-9]+-([0-9]+) :.*$"
         })
         return ("" , [], "" )
@@ -1476,6 +1477,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             "cmd": cmd,
             "env": get_env(),
             "working_dir": build.cwd,
+            "syntax": "Packages/Haxe/Support/HaxeResults.hidden-tmLanguage",
             "file_regex": haxeFileRegex #"^([^:]*):([0-9]+): characters [0-9]+-([0-9]+) :.*$"
         })
         return ("" , [], "" )
@@ -2230,6 +2232,7 @@ class HaxeExecCommand(ExecCommand):
 
     def run(self, cmd = [],  shell_cmd = None, file_regex = "", line_regex = "", working_dir = "",
             encoding = None, env = {}, quiet = False, kill = False,
+            word_wrap = True,
             # Catches "path" and "shell"
             **kwargs):
 
@@ -2262,6 +2265,12 @@ class HaxeExecCommand(ExecCommand):
         self.output_view.settings().set("result_file_regex", file_regex)
         self.output_view.settings().set("result_line_regex", line_regex)
         self.output_view.settings().set("result_base_dir", working_dir)
+        self.output_view.settings().set("word_wrap", word_wrap)
+        self.output_view.settings().set("line_numbers", False)
+        self.output_view.settings().set("gutter", False)
+        self.output_view.settings().set("scroll_past_end", False)
+        self.output_view.assign_syntax(
+            'Packages/Haxe/Support/HaxeResults.hidden-tmLanguage')
 
         # Call get_output_panel a second time after assigning the above
         # settings, so that it'll be picked up as a result buffer
