@@ -224,9 +224,9 @@ class HaxeGeneratePropVar():
         if prop:
             fname = '_' + prop[1]
             fgroup = prop[0]
-            caption = 'New var ' + fname
+            caption = 'Add var ' + fname
             if fgroup == FIELD_STATIC_VAR:
-                caption = 'New static var ' + fname
+                caption = 'Add static var ' + fname
             if fname not in ctx.type.field_map:
                 ret = 'Dynamic'
                 if mo.group(3):
