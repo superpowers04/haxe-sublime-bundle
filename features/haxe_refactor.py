@@ -177,12 +177,14 @@ class HaxeRefactor(sublime_plugin.WindowCommand):
         if mode == 'module':
             self.options = self.classes
             cl = to_haxe_form(self.classpath, view.file_name(), True)
-            idx = self.options.index(cl)
+            if cl in self.options:
+                idx = self.options.index(cl)
         elif mode == 'package':
             self.options = self.packages
             pk = to_haxe_form(
                 self.classpath, os.path.dirname(view.file_name()))
-            idx = self.options.index(pk)
+            if pk in self.options:
+                idx = self.options.index(pk)
         else:
             return
 
