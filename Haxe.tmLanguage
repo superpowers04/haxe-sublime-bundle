@@ -731,10 +731,6 @@
 			<array>
 				<dict>
 					<key>include</key>
-					<string>#type-parameters</string>
-				</dict>
-				<dict>
-					<key>include</key>
 					<string>#block</string>
 				</dict>
 				<dict>
