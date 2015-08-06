@@ -986,12 +986,12 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             # go up all folders from file to project or root
             if file_folder is not None :
-                f = file_folder
+                f = os.path.normpath(file_folder)
                 prev = None
                 while prev != f and ( project_folder is None or project_folder in f ):
                     crawl_folders.append( f )
                     prev = f
-                    f = os.path.split( f )[0]
+                    f = os.path.abspath(os.path.join(f, os.pardir))
 
             # crawl other window folders
             for f in win_folders :
