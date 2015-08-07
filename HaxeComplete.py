@@ -691,6 +691,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
 
             lines = raw.splitlines()
             for l in lines:
+                if len(l) > 200:
+                    continue
                 if is_hxp:
                     continue
                 m = extractTag.search(l)
