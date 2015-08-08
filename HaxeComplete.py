@@ -1159,7 +1159,12 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if err :
             return None
 
-        return [(arg,) for arg in res.split("\n")]
+        return [
+            (arg,)
+            for line in res.split('\n')
+            for arg in line.split(' ')
+            if arg
+            ]
 
     def select_flambe_target( self , i , view ):
         if i == -1:
@@ -1624,7 +1629,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         del self.serverProc
 
 
-    def run_haxe( self, view , display = None) :
+    def run_haxe( self, view , display = None, haxe_args = None) :
 
         self.init_plugin( view )
 
@@ -1656,9 +1661,14 @@ class HaxeComplete( sublime_plugin.EventListener ):
         buildServerMode = settings.get('haxe_build_server_mode', True)
         completionServerMode = settings.get('haxe_completion_server_mode',True)
 
-        if self.serverMode and ( ( completionServerMode and autocomplete ) or ( buildServerMode and not autocomplete ) ) :
+        if self.serverMode and (
+                    ( completionServerMode and autocomplete ) or
+                    ( buildServerMode and not autocomplete )
+                ) and (
+                    not display or 'serverMode' not in display or
+                    display['serverMode'] ):
             args.append(("--connect" , str(HaxeComplete.inst.serverPort)))
-            args.append(("--cwd" , cwd ))
+        args.append(("--cwd" , cwd ))
         #args.append( ("--times" , "-v" ) )
 
         if not autocomplete :
@@ -1679,7 +1689,12 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 if err :
                     print("Flambe completion error: " + err)
                 else:
-                    args += [(arg,) for arg in res.split("\n")]
+                    args.extend([
+                        (arg,)
+                        for line in res.split('\n')
+                        for arg in line.split(' ')
+                        if arg
+                        ])
             else:
                 args.append( ("--no-output",) )
                 output = build.output
@@ -1689,6 +1704,9 @@ class HaxeComplete( sublime_plugin.EventListener ):
                 #args.append( ("--macro" , "SourceTools.complete()") )
 
         args.extend( build.args )
+
+        if haxe_args is not None:
+            args.extend( haxe_args )
 
         haxepath = settings.get( 'haxe_path' , 'haxe' )
         cmd = [haxepath]
@@ -1921,8 +1939,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
         return comps
 
 
-    def save_temp_file( self , view ) :
-        if not view.is_dirty():
+    def save_temp_file( self , view , force=False ) :
+        if not view.is_dirty() and not force:
             return None
 
         fn = view.file_name()

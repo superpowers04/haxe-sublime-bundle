@@ -2,6 +2,12 @@ from collections import namedtuple
 import sublime
 import re
 
+try:  # Python 3
+    from .haxe_parse_helper import parse_package
+except (ValueError):  # Python 2
+    from haxe_parse_helper import parse_package
+
+
 SCOPE_VAR = 'meta.variable.haxe.2'
 SCOPE_VAR_NAME = 'entity.name.variable.haxe.2'
 SCOPE_FUNC = 'meta.method.haxe.2'
@@ -20,7 +26,7 @@ FIELD_STATIC_VAR = 'static var'
 
 re_import = re.compile('^([ \t]*)import\s+([a-z0-9._*]+);', re.I | re.M)
 re_prop_params = re.compile(r'\((\w*)\s*,\s*(\w*)\)\s*:?\s*(\w*)')
-re_word = re.compile('^[_a-z]\w*$')
+re_word = re.compile('^[_a-zA-Z]\w*$')
 
 
 def count_blank_lines(view, pos):
@@ -241,9 +247,9 @@ CtxVar = namedtuple('CtxVar', ['group', 'name', 'region'])
 CtxMethod = namedtuple('CtxMethod', ['group', 'name', 'region', 'block'])
 CtxType = namedtuple(
     'CtxType',
-    ['group', 'name', 'region', 'block',
+    ['group', 'name', 'package', 'full_name', 'region', 'block',
         'vars', 'svars', 'methods', 'smethods', 'field_map'])
-CtxWord = namedtuple('CtxWord', ['name', 'region'])
+CtxWord = namedtuple('CtxWord', ['name', 'region', 'scope'])
 
 
 class HaxeContext(object):
@@ -359,9 +365,18 @@ class HaxeContext(object):
             for ctx in sf_ctxs:
                 field_map[ctx.name] = ctx
 
+            name = find_regions(view, SCOPE_TYPE_NAME, type_rgn, True)[0][1]
+            package = parse_package(self.src)
+
+            full_name = name
+            if package:
+                full_name = package + '.' + name
+
             self._type = CtxType(
                 type_group,
-                find_regions(view, SCOPE_TYPE_NAME, type_rgn, True)[0][1],
+                name,
+                package,
+                full_name,
                 type_rgn,
                 find_regions(view, SCOPE_TYPE_BLOCK, type_rgn)[0],
                 v_ctxs,
@@ -407,7 +422,7 @@ class HaxeContext(object):
                 if sc in scope:
                     return False
 
-            self._word = CtxWord(word, word_rgn)
+            self._word = CtxWord(word, word_rgn, scope)
 
         return self._word
 

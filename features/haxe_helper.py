@@ -98,6 +98,23 @@ def cache(filename, data=None):
     return None
 
 
+def get_classpaths(view):
+    classpaths = []
+
+    complete = HaxeComplete_inst()
+    build = complete.get_build(view)
+    classpaths.extend(complete.__class__.stdPaths)
+
+    for cp in build.classpaths:
+        classpaths.append(os.path.join(build.cwd, cp))
+
+    for lib in build.libs:
+        if lib is not None:
+            classpaths.append(lib.path)
+
+    return classpaths
+
+
 def get_env(copy_os_env=False):
     env = {}
     env["PATH"] = os.environ["PATH"]

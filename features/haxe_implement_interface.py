@@ -1,48 +1,26 @@
 import codecs
 import os.path
 import re
-import sublime
 import sublime_plugin
 
 try:  # Python 3
     from .haxe_generate_code_helper import *
     from .haxe_organize_imports import HaxeOrganizeImports
-    from .haxe_helper import HaxeComplete_inst
+    from .haxe_helper import HaxeComplete_inst, get_classpaths
+    from .haxe_parse_helper import *
 except (ValueError):  # Python 2
     from haxe_generate_code_helper import *
     from haxe_organize_imports import HaxeOrganizeImports
-    from haxe_helper import HaxeComplete_inst
+    from haxe_helper import HaxeComplete_inst, get_classpaths
+    from haxe_parse_helper import *
 
-re_comments = re.compile(
-    r'(//[^\n\r]*?[\n\r]|/\*(.*?)\*/)', re.MULTILINE | re.DOTALL)
 re_implements = re.compile(r'implements\s+([\w\.]+)', re.MULTILINE)
 re_field = re.compile(r'(var|function)\s+(\w+)[^;]*;', re.MULTILINE)
-re_import = re.compile(r'import\s+([\w\.*]+)[^;]*;', re.MULTILINE)
 re_return = re.compile(r'\)\s*:\s*([\w\.<>-]+);', re.MULTILINE)
 
 
 def is_full_path(path):
     return '.' in path
-
-
-def is_package(package):
-    first_letter = package.rpartition('.')[2][0]
-    return first_letter.lower() == first_letter
-
-
-def is_string(value):
-    val = False
-    try:
-        val = isinstance(value, str)
-    except NameError:
-        val = isinstance(value, basestring)
-
-    return val
-
-
-def is_type(name):
-    first_letter = name[0]
-    return first_letter.upper() == first_letter
 
 
 class HaxeImplementInterface(sublime_plugin.WindowCommand):
@@ -73,27 +51,13 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
 
         return None
 
-    def find_classpaths(self):
-        view = self.window.active_view()
-        self.classpaths = []
-
-        build = HaxeComplete_inst().get_build(view)
-        self.classpaths.extend(HaxeComplete_inst().__class__.stdPaths)
-
-        for cp in build.classpaths:
-            self.classpaths.append(os.path.join(build.cwd, cp))
-
-        for lib in build.libs:
-            if lib is not None:
-                self.classpaths.append(lib.path)
-
     def find_fields(self):
         extends = []
 
         for iface in self.interfaces:
             s = codecs.open(iface[2], "r", "utf-8", "ignore")
-            src = re_comments.sub('', s.read())
-            imp_map = self.get_import_map(src)
+            src = remove_comments(s.read())
+            imp_map = parse_imports(src, True)
             pat = 'interface\s+%s\s+(extends\s+([\w.]+))?\s*\{' % iface[0]
             mo = re.search(pat, src, re.MULTILINE)
             if mo:
@@ -102,10 +66,19 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
                 self.fields_to_insert.extend(self.extract_fields(src_type))
 
                 if mo.group(2):
-                    exname, ex = self.split_type(mo.group(2), imp_map)
-                    if ex is not None and exname not in self.parsed_iname_map:
+                    # exname, ex = self.split_type(mo.group(2), imp_map)
+                    full_type_name = find_full_type_name(
+                        mo.group(2), self.type_map, imp_map)
+
+                    if full_type_name is None:
+                        # error
+                        continue
+
+                    type_name = full_type_name.rpartition('.')[2]
+
+                    if type_name not in self.parsed_iname_map:
                         extends.append(
-                            (exname, self.get_module_file_path(exname, ex)))
+                            (type_name, to_module_filepath(full_type_name)))
 
         if extends:
             self.interfaces = extends
@@ -130,6 +103,7 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
             if ifile:
                 lst.append((iname, ipath, ifile))
 
+        print('files', lst)
         self.interfaces = lst
 
     def find_interfaces(self):
@@ -138,43 +112,34 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
         src = view.substr(ctx.type.region)
         self.interfaces = []
         ifaces = []
-        imp_map = self.get_import_map()
+        imp_map = parse_imports(remove_comments(self.context.src), True)
 
         for mo in re_implements.finditer(src):
             ifaces.append(mo.group(1))
 
+        print(ifaces)
         for iface in ifaces:
-            type_name, type_path = self.split_type(iface, imp_map)
+            # type_name, type_path = self.split_type(iface, imp_map)
+            full_type_name = find_full_type_name(iface, self.type_map, imp_map)
 
-            if type_path is None:
+            if full_type_name is None:
+                # error
                 continue
 
-            self.interfaces.append(
-                (type_name, self.get_module_file_path(type_name, type_path)))
+            self.interfaces.append((
+                full_type_name.rpartition('.')[2],
+                to_module_filepath(full_type_name)))
+        print(self.interfaces)
 
-    def get_import_map(self, src=None):
-        if src is None:
-            view = self.window.active_view()
-            src = re_comments.sub(
-                '', view.substr(sublime.Region(0, view.size())))
-
-        dct = {}
-
-        for mo in re_import.finditer(src):
-            imp_name = mo.group(1).rpartition('.')[2]
-            dct[imp_name] = mo.group(1)
-
-        return dct
-
-    def get_module_file_path(self, type_name, type_path):
-        if is_package(type_path):
-            type_path += '.' + type_name
-        stype_path = type_path.split('.')
-        if len(stype_path) > 1 and \
-                is_type(stype_path[-1]) and is_type(stype_path[-2]):
-            stype_path.pop()
-        path = os.path.join(*stype_path)
-        return '%s.hx' % path
+    # def get_module_file_path(self, type_name, type_path):
+    #     if is_package(type_path):
+    #         type_path += '.' + type_name
+    #     stype_path = type_path.split('.')
+    #     if len(stype_path) > 1 and \
+    #             is_type(stype_path[-1]) and is_type(stype_path[-2]):
+    #         stype_path.pop()
+    #     path = os.path.join(*stype_path)
+    #     return '%s.hx' % path
 
     def insert_fields(self):
         for field in self.fields_to_insert:
@@ -222,6 +187,7 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
             return
 
         self.context = get_context(view)
+        self.classpaths = get_classpaths(view)
 
         if not self.context.type:
             return
@@ -233,36 +199,7 @@ class HaxeImplementInterface(sublime_plugin.WindowCommand):
         self.parsed_iname_map = {}
         self.fields_to_insert = []
 
-        self.find_classpaths()
         self.find_interfaces()
         self.find_files()
         self.find_fields()
         self.insert_fields()
-
-    def search_type_path(self, typ, imp_map):
-        path = self.type_map[typ]
-        imps = [imp_map[k] for k in imp_map]
-
-        if is_string(path):
-            for imp in imps:
-                if path in imp:
-                    return path
-        else:
-            for p in path:
-                for imp in imps:
-                    if p in imp:
-                        return p
-
-        return None
-
-    def split_type(self, typ, imp_map):
-        if is_full_path(typ):
-            type_name = typ.rpartition('.')[2]
-            type_path = typ
-        elif typ in self.type_map:
-            type_name = typ
-            type_path = self.search_type_path(typ, imp_map)
-        else:
-            return None, None
-
-        return type_name, type_path

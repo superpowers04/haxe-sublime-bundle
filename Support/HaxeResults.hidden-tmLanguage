@@ -16,11 +16,11 @@
 		</dict>
 		<dict>
 			<key>include</key>
-			<string>#usage</string>
+			<string>#neko</string>
 		</dict>
 		<dict>
 			<key>include</key>
-			<string>#neko</string>
+			<string>#usage</string>
 		</dict>
 	</array>
 	<key>repository</key>
@@ -67,54 +67,89 @@
 		</dict>
 		<key>haxe</key>
 		<dict>
+			<key>begin</key>
+			<string>^(?:.*[/\\]|)(\w+)(?:\.\w+)?(:)(\d+)(:)</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>support.class.haxe.2</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.separator.haxe.2</string>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>constant.language.haxe.2</string>
+				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.separator.haxe.2</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>$</string>
 			<key>patterns</key>
 			<array>
+				<dict>
+					<key>match</key>
+					<string>\s(?:character|line)</string>
+				</dict>
 				<dict>
 					<key>captures</key>
 					<dict>
 						<key>1</key>
 						<dict>
 							<key>name</key>
-							<string>support.class.haxe.2</string>
+							<string>constant.language.haxe.2</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>constant.language.haxe.2</string>
+						</dict>
+						<key>3</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.separator.haxe.2</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>s\s(\d+)-(\d+)\s(:)\s</string>
+				</dict>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>constant.language.haxe.2</string>
 						</dict>
 						<key>2</key>
 						<dict>
 							<key>name</key>
 							<string>punctuation.separator.haxe.2</string>
 						</dict>
-						<key>3</key>
-						<dict>
-							<key>name</key>
-							<string>constant.language.haxe.2</string>
-						</dict>
-						<key>4</key>
-						<dict>
-							<key>name</key>
-							<string>punctuation.separator.haxe.2</string>
-						</dict>
-						<key>5</key>
-						<dict>
-							<key>name</key>
-							<string>constant.language.haxe.2</string>
-						</dict>
-						<key>6</key>
-						<dict>
-							<key>name</key>
-							<string>constant.language.haxe.2</string>
-						</dict>
-						<key>7</key>
-						<dict>
-							<key>name</key>
-							<string>punctuation.separator.haxe.2</string>
-						</dict>
-						<key>8</key>
+					</dict>
+					<key>match</key>
+					<string>\s(\d+)\s(:)\s</string>
+				</dict>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
 						<dict>
 							<key>name</key>
 							<string>string.quoted.double.haxe.2</string>
 						</dict>
 					</dict>
 					<key>match</key>
-					<string>^(?:.*[/\\]|)(\w+)(?:\.\w+)?(:)(\d+)(:)(?:\scharacters\s(\d+)-(\d+)\s(:))?\s(.*)$</string>
+					<string>(.*)</string>
 				</dict>
 			</array>
 		</dict>
@@ -297,6 +332,23 @@
 						<key>1</key>
 						<dict>
 							<key>name</key>
+							<string>keyword.other.haxe.2</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.function.haxe.2</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>^(Find usages:) ([\w\.]+)$</string>
+				</dict>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
 							<string>support.class.haxe.2</string>
 						</dict>
 						<key>2</key>
@@ -317,7 +369,7 @@
 		</dict>
 	</dict>
 	<key>scopeName</key>
-	<string>source.haxe.2</string>
+	<string>text.haxe-results</string>
 	<key>uuid</key>
 	<string>fd62cd72-48d1-4e06-9ecd-76267656ac18</string>
 </dict>

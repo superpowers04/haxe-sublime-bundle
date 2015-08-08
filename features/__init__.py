@@ -22,6 +22,7 @@ from .haxe_refactoring import HaxeRefactoring
 from .haxe_fix_module import HaxeFixModule
 from .haxe_refactor import HaxeRefactor
 from .haxe_promote_var import HaxePromoteVar, HaxePromoteVarEdit
+from .haxe_usage import HaxeUsage
 from .haxe_helper import *
 from .haxe_errors import *
 
