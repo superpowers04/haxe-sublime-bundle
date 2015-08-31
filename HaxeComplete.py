@@ -1464,13 +1464,18 @@ class HaxeComplete( sublime_plugin.EventListener ):
         target = HaxeBuild.nme_target[1].split(" ")
         cmd.extend(target)
 
-        view.window().run_command("exec", {
+        cmdArgs = {
             "cmd": cmd,
             "env": get_env(),
             "working_dir": os.path.dirname(build.nmml),
-            "syntax": "Packages/Haxe/Support/HaxeResults.hidden-tmLanguage",
             "file_regex": haxeFileRegex #"^([^:]*):([0-9]+): characters [0-9]+-([0-9]+) :.*$"
-        })
+        };
+
+        # Sublime Text 3+ supports colorizing of the build system output
+        if int(sublime.version()) >= 3000:
+            cmdArgs.syntax = "Packages/Haxe/Support/HaxeResults.hidden-tmLanguage"
+
+        view.window().run_command("exec", cmdArgs)
         return ("" , [], "" )
 
     def run_flambe( self , view , build ):
