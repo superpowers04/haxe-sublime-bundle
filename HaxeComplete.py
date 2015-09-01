@@ -1469,11 +1469,11 @@ class HaxeComplete( sublime_plugin.EventListener ):
             "env": get_env(),
             "working_dir": os.path.dirname(build.nmml),
             "file_regex": haxeFileRegex #"^([^:]*):([0-9]+): characters [0-9]+-([0-9]+) :.*$"
-        };
+        }
 
         # Sublime Text 3+ supports colorizing of the build system output
         if int(sublime.version()) >= 3000:
-            cmdArgs.syntax = "Packages/Haxe/Support/HaxeResults.hidden-tmLanguage"
+            cmdArgs["syntax"] = "Packages/Haxe/Support/HaxeResults.hidden-tmLanguage"
 
         view.window().run_command("exec", cmdArgs)
         return ("" , [], "" )
@@ -1488,13 +1488,18 @@ class HaxeComplete( sublime_plugin.EventListener ):
         if self.serverMode and buildServerMode :
             cmd += ["--haxe-server", str(HaxeComplete.inst.serverPort)]
 
-        view.window().run_command("exec", {
+        cmdArgs = {
             "cmd": cmd,
             "env": get_env(),
             "working_dir": build.cwd,
-            "syntax": "Packages/Haxe/Support/HaxeResults.hidden-tmLanguage",
             "file_regex": haxeFileRegex #"^([^:]*):([0-9]+): characters [0-9]+-([0-9]+) :.*$"
-        })
+        }
+
+        # Sublime Text 3+ supports colorizing of the build system output
+        if int(sublime.version()) >= 3000:
+            cmdArgs["syntax"] = "Packages/Haxe/Support/HaxeResults.hidden-tmLanguage"
+
+        view.window().run_command("exec", cmdArgs)
         return ("" , [], "" )
 
     def init_plugin( self , view ) :
