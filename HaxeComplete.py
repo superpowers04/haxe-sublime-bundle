@@ -1924,6 +1924,8 @@ class HaxeComplete( sublime_plugin.EventListener ):
         is_hxml = 'source.hxml' in scope
         comps = []
 
+        #print(scope)
+
         if not self.force_display_completion and \
                 not view.settings().get('haxe_auto_complete', True):
             return comps
@@ -1937,6 +1939,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             return comps
 
         if 'keyword.control.directive.conditional.haxe.2' in scope or \
+                'meta.control.directive.conditional.haxe.2' in scope or \
                 'string' in scope or \
                 'comment' in scope:
             return comps
