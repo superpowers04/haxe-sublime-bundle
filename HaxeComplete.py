@@ -1919,6 +1919,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
         return ( err, comps, status, hints, fields )
 
     def on_query_completions(self, view, prefix, locations):
+        
         scope = view.scope_name(locations[0])
         is_haxe = 'source.haxe.2' in scope
         is_hxml = 'source.hxml' in scope
