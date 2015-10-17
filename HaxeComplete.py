@@ -1434,7 +1434,7 @@ class HaxeComplete( sublime_plugin.EventListener ):
             build.args.append( ("--no-output",) )
             #build.args.append( ("-main" , build.main ) )
 
-            build.args.append( ( build.target , build.output ) )
+            build.args.append( ( "-" + build.target , build.output ) )
             #build.args.append( ("--no-output" , "-v" ) )
 
             build.hxml = os.path.join( src_dir , "build.hxml")
