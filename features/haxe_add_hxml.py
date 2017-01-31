@@ -7,7 +7,6 @@ try: # Python 3
 except (ValueError): # Python 2
     from haxe_helper import HaxeComplete_inst, isType
 
-print("hello")
 class HaxeAddHxml( sublime_plugin.WindowCommand ):
 
     # add builds from hxml and append to project settings
