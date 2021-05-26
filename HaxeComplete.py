@@ -73,7 +73,7 @@ except (AttributeError):
 # For parsing xml
 
 from xml.etree import ElementTree
-from xml.etree.ElementTree import XMLTreeBuilder
+from xml.etree.ElementTree import TreeBuilder as XMLTreeBuilder
 
 try :
     from elementtree import SimpleXMLTreeBuilder # part of your codebase
