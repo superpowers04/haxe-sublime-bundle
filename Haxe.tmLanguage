@@ -502,7 +502,7 @@
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>\bvar\b</string>
+					<string>\b(var|final)\b</string>
 					<key>name</key>
 					<string>storage.type.variable.haxe.2</string>
 				</dict>
@@ -1818,7 +1818,7 @@
 		<key>variable</key>
 		<dict>
 			<key>begin</key>
-			<string>(?=var)</string>
+			<string>(?=var|final)</string>
 			<key>end</key>
 			<string>(;)</string>
 			<key>endCaptures</key>
@@ -1916,7 +1916,7 @@
 		<key>variable-name</key>
 		<dict>
 			<key>begin</key>
-			<string>\b(var)\b</string>
+			<string>\b(var|final)\b</string>
 			<key>beginCaptures</key>
 			<dict>
 				<key>1</key>
