@@ -47,7 +47,9 @@ contexts:
           pop: true
         - include: block
         - include: block-contents
+
   block-contents:
+    - include: hxcpp-inline
     - include: regex
     - include: arrays
     - include: parameters
@@ -66,6 +68,23 @@ contexts:
     - include: punctuation-terminator
     - include: punctuation-brackets
     - include: support-class-name
+  hxcpp-inline:
+    - match: (untyped __cpp__\(\')
+      scope: keyword.control.directive.native.cpp.haxe.2
+      push: C++.sublime-syntax
+      # push: block
+      with_prototype:
+        - match: ([^\\]('\)))
+          scope: keyword.control.directive.native.cpp.haxe.2
+          pop: true
+    - match: (untyped __cpp__\(\")
+      scope: keyword.control.directive.native.cpp.haxe.2
+      push: C++.sublime-syntax
+      # push: block
+      with_prototype:
+        - match: ([^\\]("\)))
+          scope: keyword.control.directive.native.cpp.haxe.2
+          pop: true
   comments:
     - match: (/\*)
       captures:
@@ -406,6 +425,9 @@ contexts:
         - include: punctuation-brackets
         - include: punctuation-separator
         - include: support-class-name
+  types-builtin:
+    - match: (?x:Bool|Float|Int|Map|Array|String|Dynamic|Class|T)
+      scope: support.type.haxe.4
   type-class:
     - match: (?=class)
       push:
