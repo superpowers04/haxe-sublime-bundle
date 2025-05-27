@@ -72,17 +72,8 @@ contexts:
     - match: (untyped __cpp__\(\')
       scope: keyword.control.directive.native.cpp.haxe.2
       push: C++.sublime-syntax
-      # push: block
       with_prototype:
         - match: ([^\\]('\)))
-          scope: keyword.control.directive.native.cpp.haxe.2
-          pop: true
-    - match: (untyped __cpp__\(\")
-      scope: keyword.control.directive.native.cpp.haxe.2
-      push: C++.sublime-syntax
-      # push: block
-      with_prototype:
-        - match: ([^\\]("\)))
           scope: keyword.control.directive.native.cpp.haxe.2
           pop: true
   comments:
